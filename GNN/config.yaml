@@ -1,0 +1,87 @@
+# GNN Accessibility Hotspot Detection Configuration
+
+# Data Configuration
+data:
+  csv_path: "/Users/Fortu/Downloads/datathon26/data/Access_to_Everyday_Life_Dataset.csv"
+  process_all_cities: true
+  city_filter: null  # Set to specific city name to filter, or null for all
+
+# Graph Construction
+graph:
+  method: "knn"  # "knn" or "distance_threshold"
+  k_neighbors: 15
+  distance_threshold: 500.0  # meters (if using distance_threshold method)
+  edge_weight_method: "inverse_distance"  # "inverse_distance" or "gaussian"
+  gaussian_sigma: 200.0  # for gaussian edge weights
+
+# GNN Model Architecture
+model:
+  architecture: "gat"  # "gat", "gcn", or "graphsage"
+  input_dim: null  # auto-calculated from features
+  hidden_dim: 128
+  embedding_dim: 64
+  num_layers: 3
+  num_heads: 4  # for GAT
+  dropout: 0.2
+  activation: "relu"
+
+# Training Configuration
+training:
+  method: "contrastive"  # "self_supervised", "contrastive", or "multi_task"
+  learning_rate: 0.001
+  batch_size: 1  # for full graph training
+  num_epochs: 100
+  early_stopping_patience: 999999  # Set to very high value to disable (or use 0 to disable completely)
+  validation_split: 0.2
+  contrastive_margin: 1.0
+  positive_pair_distance: 100.0  # meters
+  negative_pair_distance: 1000.0  # meters
+  max_nodes_per_batch: 20000  # Maximum nodes to process per batch (for large graphs)
+
+# Feature Extraction & Aggregation
+feature_extraction:
+  aggregation_method: "grid"  # "grid", "neighborhood", or "density"
+  grid_size: 0.001  # degrees (approximately 100m)
+  dbscan_eps: 200.0  # meters (for density-based aggregation)
+  dbscan_min_samples: 5
+
+# Hotspot Scoring
+hotspot_scoring:
+  density_weight: 0.4  # alpha
+  severity_weight: 0.4  # beta
+  diversity_weight: 0.2  # gamma
+  use_gnn_embeddings: true
+  embedding_weight: 0.3  # if using GNN embeddings
+
+# Hotspot Detection
+hotspot_detection:
+  clustering_method: "dbscan"  # "kmeans", "dbscan", or "hierarchical"
+  num_clusters: null  # for kmeans (auto if null)
+  dbscan_eps: 0.5  # normalized risk score units
+  dbscan_min_samples: 10
+  use_spatial_statistics: true
+  getis_ord_alpha: 0.05
+  kde_bandwidth: 0.1
+
+# Evaluation
+evaluation:
+  compute_silhouette: true
+  compute_morans_i: true
+  high_severity_threshold: 4  # severity >= this is "high severity"
+  coverage_metric: true
+
+# Visualization
+visualization:
+  output_dir: "outputs"
+  map_style: "openstreetmap"
+  point_size: 3
+  heatmap_opacity: 0.6
+  save_embeddings_plot: true
+  save_graph_visualization: false  # can be slow for large graphs
+
+# Paths
+paths:
+  model_save_dir: "models"
+  output_dir: "outputs"
+  log_dir: "logs"
+
