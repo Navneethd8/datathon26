@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seattle Accessibility Analysis Dashboard</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Map Layer Bar - below navigation */
+        .map-layer-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card-hover);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 58px;
+            z-index: 999;
+            flex-wrap: wrap;
+        }
+
+        .bar-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        /* Main content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem;
+            color: var(--secondary);
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Map container */
+        #mapContainer {
+            height: 600px;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+
+        /* Map controls */
+        .map-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.5rem 0;
+        }
+
+        .map-control {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .map-control:hover,
+        .map-control.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        /* Image gallery */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .image-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: scale(1.02);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-card .caption {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: var(--bg-card-hover);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        /* Risk badges */
+        .risk-high {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .risk-low {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>🦽 Seattle Accessibility Analysis</h1>
+        <p>Transformer-based Temporal Forecasting & Equity Analysis</p>
+    </header>
+
+    <nav class="nav">
+        <button class="nav-btn active" onclick="showSection('overview')">📊 Overview</button>
+        <button class="nav-btn" onclick="showSection('map')">🗺️ Interactive Map</button>
+        <button class="nav-btn" onclick="showSection('blocks')">🧱 Block Analysis</button>
+        <button class="nav-btn" onclick="showSection('predictions')">🔮 Predictions</button>
+        <button class="nav-btn" onclick="showSection('analysis')">📈 Analysis</button>
+        <button class="nav-btn" onclick="showSection('model')">🤖 Model</button>
+    </nav>
+
+    <!-- Map Layer Controls Bar - visible only when map section is active -->
+    <div id="map-layer-bar" class="map-layer-bar" style="display: none;">
+        <span class="bar-label">Map Layers:</span>
+        <button class="map-control active" onclick="showLayer('barriers')">📍 Barrier Points</button>
+        <button class="map-control" onclick="showLayer('cells')">🧱 Grid Cells</button>
+        <button class="map-control" onclick="showLayer('heatmap')">🔥 Heatmap</button>
+        <button class="map-control" onclick="showLayer('neighborhoods')">🏘️ Neighborhoods</button>
+    </div>
+
+    <main class="container">
+
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-barriers">--</div>
+                    <div class="stat-label">Accessibility Barriers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-cells">--</div>
+                    <div class="stat-label">Grid Cells</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-high-risk">--</div>
+                    <div class="stat-label">High Risk Cells</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0.827</div>
+                    <div class="stat-label">Model R² Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-neighborhoods">--</div>
+                    <div class="stat-label">Neighborhoods</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 Project Summary</h2>
+                <p>This dashboard presents a comprehensive analysis of Seattle's sidewalk accessibility barriers using
+                    transformer-based temporal forecasting. Our model achieves an R² of 0.827, outperforming both LSTM
+                    (0.777) and XGBoost (0.033) baselines.</p>
+
+                <h3>Key Features</h3>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+                    <li><strong>Block-wise Analysis:</strong> ~500m grid cells for granular predictions</li>
+                    <li><strong>Temporal Forecasting:</strong> Multi-step predictions for accessibility trends</li>
+                    <li><strong>Geospatial Analysis:</strong> Interactive heatmaps and hotspot identification</li>
+                    <li><strong>Equity Assessment:</strong> Demographic correlation with accessibility</li>
+                </ul>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/plots/q1_barrier_type_frequency.png" alt="Barrier Types">
+                    <div class="caption">Barrier Type Distribution</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/plots/q2_geographic_distribution.png" alt="Geographic Distribution">
+                    <div class="caption">Geographic Distribution</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Map Section -->
+        <section id="map" class="section">
+            <div class="card">
+                <h2>🗺️ Interactive Accessibility Map</h2>
+                <p>Explore barrier locations, grid cell density, and risk levels across Seattle. Use the layer controls
+                    above to switch views.</p>
+
+                <div id="mapContainer"></div>
+
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>Low Risk (1-19 barriers)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>Medium Risk (20-49 barriers)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ef4444;"></div>
+                        <span>High Risk (50+ barriers)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Block Analysis Section -->
+        <section id="blocks" class="section">
+            <div class="card">
+                <h2>🧱 Block-wise Risk Analysis</h2>
+                <p>Grid cells (~500m) with risk levels based on barrier density and severity.</p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value risk-high" id="block-high">--</div>
+                        <div class="stat-label">High Risk Cells</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value risk-medium" id="block-medium">--</div>
+                        <div class="stat-label">Medium Risk Cells</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value risk-low" id="block-low">--</div>
+                        <div class="stat-label">Low Risk Cells</div>
+                    </div>
+                </div>
+
+                <h3>Top High-Risk Grid Cells</h3>
+                <table class="data-table" id="cells-table">
+                    <thead>
+                        <tr>
+                            <th>Cell ID</th>
+                            <th>Neighborhood</th>
+                            <th>Barriers</th>
+                            <th>Avg Severity</th>
+                            <th>Dominant Type</th>
+                            <th>Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cells-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Predictions Section -->
+        <section id="predictions" class="section">
+            <div class="card">
+                <h2>🔮 Neighborhood Risk Forecasts</h2>
+                <p>Multi-step predictions from our Transformer model (R²=0.827)</p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Neighborhood</th>
+                            <th>Barriers</th>
+                            <th>Avg Severity</th>
+                            <th>Current Score</th>
+                            <th>Predicted</th>
+                            <th>Change</th>
+                            <th>Risk</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predictions-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/plots/spatial_risk_prediction.png" alt="Spatial Risk">
+                    <div class="caption">Spatial Risk Heatmap</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="section">
+            <div class="card">
+                <h2>📈 Geospatial & Equity Analysis</h2>
+                <p>Understanding the relationship between demographics and accessibility barriers.</p>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/plots/geospatial_heatmap.png" alt="Geospatial Heatmap">
+                    <div class="caption">Geospatial Barrier Heatmap</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/plots/equity_analysis.png" alt="Equity Analysis">
+                    <div class="caption">Equity Analysis</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/plots/q3_accessibility_scores.png" alt="Accessibility Scores">
+                    <div class="caption">Accessibility Score Distribution</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/plots/barrier_types_over_time.png" alt="Trends">
+                    <div class="caption">Barrier Types Over Time</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Model Section -->
+        <section id="model" class="section">
+            <div class="card">
+                <h2>🤖 Model Performance Comparison</h2>
+                <p>Our optimized Transformer significantly outperforms traditional approaches.</p>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>MAE</th>
+                            <th>RMSE</th>
+                            <th>R² Score</th>
+                            <th>Parameters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🥇 Transformer</strong></td>
+                            <td>13.91</td>
+                            <td>22.50</td>
+                            <td><span class="risk-low">0.8267</span></td>
+                            <td>2.8M</td>
+                        </tr>
+                        <tr>
+                            <td>🥈 BiLSTM</td>
+                            <td>16.80</td>
+                            <td>25.52</td>
+                            <td><span class="risk-medium">0.7770</span></td>
+                            <td>1.1M</td>
+                        </tr>
+                        <tr>
+                            <td>🥉 XGBoost</td>
+                            <td>42.72</td>
+                            <td>53.16</td>
+                            <td><span class="risk-high">0.0327</span></td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/plots/max_performance_comparison.png" alt="Model Comparison">
+                    <div class="caption">Model Performance Comparison</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>⚙️ Architecture Details</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                    <div>
+                        <h3>Transformer Config</h3>
+                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                            <li><strong>d_model:</strong> 192</li>
+                            <li><strong>Heads:</strong> 12</li>
+                            <li><strong>Layers:</strong> 6</li>
+                            <li><strong>Features:</strong> 72</li>
+                            <li><strong>Sequence:</strong> 5 steps</li>
+                            <li><strong>Horizon:</strong> 3 steps</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Optimizations</h3>
+                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                            <li>Cosine warmup scheduler</li>
+                            <li>Huber loss function</li>
+                            <li>Data augmentation</li>
+                            <li>CLS token pooling</li>
+                            <li>Pre-LayerNorm</li>
+                            <li>Xavier initialization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <script>
+        // Global data
+        let mapData = null;
+        let map = null;
+        let currentLayer = null;
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('outputs/map_data.json');
+                mapData = await response.json();
+                updateStats();
+                populateTables();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            if (!mapData) return;
+            document.getElementById('stat-barriers').textContent = mapData.stats.totalBarriers.toLocaleString();
+            document.getElementById('stat-cells').textContent = mapData.stats.totalCells.toLocaleString();
+            document.getElementById('stat-high-risk').textContent = mapData.stats.highRiskCells;
+            document.getElementById('stat-neighborhoods').textContent = mapData.stats.totalNeighborhoods;
+
+            document.getElementById('block-high').textContent = mapData.stats.highRiskCells;
+            document.getElementById('block-medium').textContent = mapData.stats.mediumRiskCells;
+            document.getElementById('block-low').textContent = mapData.stats.lowRiskCells;
+        }
+
+        // Populate tables
+        function populateTables() {
+            if (!mapData) return;
+
+            // Cells table (top 15 high risk)
+            const cellsBody = document.getElementById('cells-body');
+            const highRiskCells = mapData.cells
+                .filter(c => c.riskLevel === 'High')
+                .sort((a, b) => b.barrierCount - a.barrierCount)
+                .slice(0, 15);
+
+            highRiskCells.forEach(c => {
+                cellsBody.innerHTML += `
+                    <tr>
+                        <td>${c.cellId}</td>
+                        <td>${c.neighborhood}</td>
+                        <td>${c.barrierCount}</td>
+                        <td>${c.severityMean.toFixed(1)}</td>
+                        <td>${c.dominantType}</td>
+                        <td class="risk-high">High</td>
+                    </tr>
+                `;
+            });
+
+            // Predictions table
+            const predsBody = document.getElementById('predictions-body');
+            const sortedNeighborhoods = [...mapData.neighborhoods]
+                .sort((a, b) => a.predictedChange - b.predictedChange);
+
+            sortedNeighborhoods.forEach(n => {
+                const riskClass = n.riskLevel === 'High' ? 'risk-high' :
+                    n.riskLevel === 'Medium' ? 'risk-medium' : 'risk-low';
+                const changeStr = n.predictedChange >= 0 ? `+${n.predictedChange.toFixed(1)}` : n.predictedChange.toFixed(1);
+                predsBody.innerHTML += `
+                    <tr>
+                        <td>${n.name}</td>
+                        <td>${n.barrierCount.toLocaleString()}</td>
+                        <td>${n.severityMean.toFixed(1)}</td>
+                        <td>${n.currentScore.toFixed(1)}</td>
+                        <td>${n.predictedScore.toFixed(1)}</td>
+                        <td>${changeStr}</td>
+                        <td class="${riskClass}">${n.riskLevel}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+
+            // Show/hide map layer bar
+            const mapLayerBar = document.getElementById('map-layer-bar');
+            if (sectionId === 'map') {
+                mapLayerBar.style.display = 'flex';
+                if (!map) {
+                    setTimeout(initMap, 100);
+                }
+            } else {
+                mapLayerBar.style.display = 'none';
+            }
+        }
+
+        // Map initialization
+        function initMap() {
+            map = L.map('mapContainer').setView([47.6062, -122.3321], 12);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap © CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+
+            showLayer('barriers');
+        }
+
+
+        // Show map layer
+        function showLayer(layerName) {
+            if (!map || !mapData) return;
+
+            document.querySelectorAll('.map-control').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Remove current layer
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+            }
+
+            switch (layerName) {
+                case 'barriers':
+                    currentLayer = L.layerGroup();
+                    mapData.barriers.forEach(b => {
+                        const color = b.severity >= 4 ? '#ef4444' : b.severity >= 3 ? '#f59e0b' : '#10b981';
+                        L.circleMarker([b.lat, b.lng], {
+                            radius: 4,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 1,
+                            fillOpacity: 0.7
+                        }).bindPopup(`<b>${b.type}</b><br>Severity: ${b.severity}<br>Neighborhood: ${b.neighborhood}`)
+                            .addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'cells':
+                    currentLayer = L.layerGroup();
+                    mapData.cells.forEach(c => {
+                        const color = c.riskLevel === 'High' ? '#ef4444' :
+                            c.riskLevel === 'Medium' ? '#f59e0b' : '#10b981';
+                        const radius = Math.min(15, 5 + c.barrierCount / 20);
+                        L.circleMarker([c.lat, c.lng], {
+                            radius: radius,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 1,
+                            fillOpacity: 0.6
+                        }).bindPopup(`
+                            <b>Cell ${c.cellId}</b><br>
+                            Neighborhood: ${c.neighborhood}<br>
+                            Barriers: ${c.barrierCount}<br>
+                            Avg Severity: ${c.severityMean.toFixed(1)}<br>
+                            Risk: ${c.riskLevel}
+                        `).addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'heatmap':
+                    const heatData = mapData.barriers.map(b => [b.lat, b.lng, b.severity / 5]);
+                    currentLayer = L.heatLayer(heatData, {
+                        radius: 20,
+                        blur: 15,
+                        maxZoom: 15,
+                        gradient: { 0.2: '#10b981', 0.5: '#f59e0b', 0.8: '#ef4444', 1: '#dc2626' }
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'neighborhoods':
+                    currentLayer = L.layerGroup();
+                    mapData.neighborhoods.forEach(n => {
+                        const color = n.riskLevel === 'High' ? '#ef4444' :
+                            n.riskLevel === 'Medium' ? '#f59e0b' : '#10b981';
+                        L.circleMarker([n.lat, n.lng], {
+                            radius: Math.min(25, 8 + n.barrierCount / 500),
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 2,
+                            fillOpacity: 0.7
+                        }).bindPopup(`
+                            <b>${n.name}</b><br>
+                            Barriers: ${n.barrierCount.toLocaleString()}<br>
+                            Avg Severity: ${n.severityMean.toFixed(1)}<br>
+                            Predicted Change: ${n.predictedChange >= 0 ? '+' : ''}${n.predictedChange.toFixed(1)}<br>
+                            Risk: ${n.riskLevel}
+                        `).addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+            }
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+
+</html>
