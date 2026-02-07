@@ -1,0 +1,11 @@
+# Antigravity (AI Assistant) files
+.gemini/
+.antigravity/
+antigravity/
+bun.lockb
+
+# macOS system files (often seen on external drives)
+._*
+
+# Recursive macOS system files
+**/._*
