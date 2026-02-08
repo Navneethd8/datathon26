@@ -179,9 +179,7 @@ class Evaluator:
         Args:
             metrics: Dictionary of metrics
         """
-        print("\n" + "="*50)
-        print("Evaluation Metrics")
-        print("="*50)
+        print("\nEvaluation Metrics")
         
         if 'silhouette_score' in metrics:
             print(f"Silhouette Score: {metrics['silhouette_score']:.4f}")
@@ -200,5 +198,5 @@ class Evaluator:
         print(f"  Hotspot ratio: {metrics.get('hotspot_ratio', 0):.2%}")
         print(f"  Avg risk in hotspots: {metrics.get('avg_risk_in_hotspots', 0):.4f}")
         print(f"  Avg risk outside: {metrics.get('avg_risk_outside_hotspots', 0):.4f}")
-        print("="*50 + "\n")
+        print("")
 

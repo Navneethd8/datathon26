@@ -157,9 +157,7 @@ class BaselineComparison:
         Returns:
             Comparison results dictionary
         """
-        print("\n" + "="*60)
-        print("Running Baseline Comparisons")
-        print("="*60)
+        print("\nBaseline Comparison")
         
         results = {}
         

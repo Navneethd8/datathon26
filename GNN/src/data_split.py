@@ -197,9 +197,7 @@ class DataSplitter:
         Args:
             splits: Dictionary with split data
         """
-        print("\n" + "="*50)
-        print("Data Split Summary")
-        print("="*50)
+        print("\nData Split Summary")
         
         if 'train' in splits:
             if isinstance(splits['train'], dict):
@@ -218,5 +216,5 @@ class DataSplitter:
                         pct = (n / total) * 100 if total > 0 else 0
                         print(f"{split_name.capitalize()}: {n} samples ({pct:.1f}%)")
         
-        print("="*50 + "\n")
+        print("")
 
