@@ -46,7 +46,7 @@ else:
 print(f"Using device: {DEVICE}")
 
 
-# ============= 1. ENHANCED FEATURE ENGINEERING =============
+# 1. ENHANCED FEATURE ENGINEERING
 
 def add_enhanced_temporal_features(df: pd.DataFrame, target_col: str = 'accessibility_score') -> pd.DataFrame:
     """
@@ -114,7 +114,7 @@ def add_enhanced_temporal_features(df: pd.DataFrame, target_col: str = 'accessib
     return df
 
 
-# ============= 2. STANDARDSCALER NORMALIZATION =============
+# 2. STANDARDSCALER NORMALIZATION
 
 def prepare_normalized_data(df: pd.DataFrame, target_col: str = 'accessibility_score'):
     """
@@ -144,7 +144,7 @@ def prepare_normalized_data(df: pd.DataFrame, target_col: str = 'accessibility_s
     return X_scaled, y_scaled.flatten(), feature_scaler, target_scaler, feature_cols
 
 
-# ============= 3. INCREASED SEQUENCE LENGTH DATASET =============
+# 3. INCREASED SEQUENCE LENGTH DATASET
 
 class EnhancedTimeSeriesDataset(Dataset):
     """
@@ -194,7 +194,7 @@ class EnhancedTimeSeriesDataset(Dataset):
         )
 
 
-# ============= 4. TRANSFORMER WITH REGULARIZATION =============
+# 4. TRANSFORMER WITH REGULARIZATION
 
 class RegularizedTransformer(nn.Module):
     """
@@ -257,7 +257,7 @@ class RegularizedTransformer(nn.Module):
         return self.output_head(x)
 
 
-# ============= 5. XGBOOST BASELINE =============
+# 5. XGBOOST BASELINE
 
 def train_xgboost_baseline(X_train, y_train, X_val, y_val, 
                            target_scaler, pred_len: int = 3):
@@ -321,7 +321,7 @@ def train_xgboost_baseline(X_train, y_train, X_val, y_val,
     return models, {'mae': mae, 'rmse': rmse, 'r2': r2}
 
 
-# ============= 6. TRAINING WITH REGULARIZATION =============
+# 6. TRAINING WITH REGULARIZATION
 
 def train_transformer(model, train_loader, val_loader, 
                       target_scaler,

@@ -78,7 +78,7 @@ else:
 print(f"Using device: {DEVICE}")
 
 
-# ============= DATA AUGMENTATION =============
+# DATA AUGMENTATION
 
 class AugmentedDataset(Dataset):
     """Dataset with noise injection and temporal jittering."""
@@ -140,7 +140,7 @@ class AugmentedDataset(Dataset):
         self._training = False
 
 
-# ============= ENHANCED TRANSFORMER =============
+# ENHANCED TRANSFORMER
 
 class MaxPerformanceTransformer(nn.Module):
     """
@@ -223,7 +223,7 @@ class MaxPerformanceTransformer(nn.Module):
         return self.output_head(cls_output)
 
 
-# ============= BIDIRECTIONAL LSTM =============
+# BIDIRECTIONAL LSTM
 
 class BiLSTMModel(nn.Module):
     """
@@ -273,7 +273,7 @@ class BiLSTMModel(nn.Module):
         return self.output_head(context)
 
 
-# ============= LEARNING RATE SCHEDULER =============
+# LEARNING RATE SCHEDULER
 
 class CosineWarmupScheduler:
     """Cosine annealing with linear warmup."""
@@ -304,7 +304,7 @@ class CosineWarmupScheduler:
         return self.optimizer.param_groups[0]['lr']
 
 
-# ============= TRAINING =============
+# TRAINING
 
 def train_model(model, train_loader, val_loader, target_scaler,
                 model_name: str, epochs: int = 200, lr: float = 3e-4,
