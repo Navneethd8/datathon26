@@ -574,32 +574,32 @@
                         <tr>
                             <th>Model</th>
                             <th>MAE</th>
-                            <th>RMSE</th>
                             <th>R² Score</th>
-                            <th>Parameters</th>
+                            <th>Pct Accuracy</th>
+                            <th>Hit Rate (±15)</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="model-metrics-body">
                         <tr>
                             <td><strong>🥇 Transformer</strong></td>
-                            <td>13.91</td>
-                            <td>22.50</td>
-                            <td><span class="risk-low">0.8267</span></td>
-                            <td>2.8M</td>
+                            <td id="m-trans-mae">18.08</td>
+                            <td id="m-trans-r2" class="risk-low">0.8028</td>
+                            <td id="m-trans-pct">56.86%</td>
+                            <td id="m-trans-hit">59.26%</td>
                         </tr>
                         <tr>
                             <td>🥈 BiLSTM</td>
-                            <td>16.80</td>
-                            <td>25.52</td>
-                            <td><span class="risk-medium">0.7770</span></td>
-                            <td>1.1M</td>
+                            <td id="m-lstm-mae">21.12</td>
+                            <td id="m-lstm-r2" class="risk-medium">0.7212</td>
+                            <td id="m-lstm-pct">50.92%</td>
+                            <td id="m-lstm-hit">55.56%</td>
                         </tr>
                         <tr>
                             <td>🥉 XGBoost</td>
-                            <td>42.72</td>
-                            <td>53.16</td>
-                            <td><span class="risk-high">0.0327</span></td>
-                            <td>-</td>
+                            <td id="m-xgb-mae">40.27</td>
+                            <td id="m-xgb-r2" class="risk-high">0.1157</td>
+                            <td id="m-xgb-pct">-22.72%</td>
+                            <td id="m-xgb-hit">3.70%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -655,12 +655,45 @@
         // Load data
         async function loadData() {
             try {
+                // Load map data
                 const response = await fetch('outputs/map_data.json');
                 mapData = await response.json();
                 updateStats();
                 populateTables();
+
+                // Load model metrics
+                loadModelMetrics();
             } catch (error) {
                 console.error('Error loading data:', error);
+            }
+        }
+
+        // Load model metrics from JSON
+        async function loadModelMetrics() {
+            try {
+                const response = await fetch('outputs/model_results.json');
+                const metrics = await response.json();
+
+                if (metrics.Transformer) {
+                    document.getElementById('m-trans-mae').textContent = metrics.Transformer.mae;
+                    document.getElementById('m-trans-r2').textContent = metrics.Transformer.r2;
+                    document.getElementById('m-trans-pct').textContent = metrics.Transformer.pct_acc + '%';
+                    document.getElementById('m-trans-hit').textContent = metrics.Transformer.threshold_acc + '%';
+                }
+                if (metrics.LSTM) {
+                    document.getElementById('m-lstm-mae').textContent = metrics.LSTM.mae;
+                    document.getElementById('m-lstm-r2').textContent = metrics.LSTM.r2;
+                    document.getElementById('m-lstm-pct').textContent = metrics.LSTM.pct_acc + '%';
+                    document.getElementById('m-lstm-hit').textContent = metrics.LSTM.threshold_acc + '%';
+                }
+                if (metrics.XGBoost) {
+                    document.getElementById('m-xgb-mae').textContent = metrics.XGBoost.mae;
+                    document.getElementById('m-xgb-r2').textContent = metrics.XGBoost.r2;
+                    document.getElementById('m-xgb-pct').textContent = metrics.XGBoost.pct_acc + '%';
+                    document.getElementById('m-xgb-hit').textContent = metrics.XGBoost.threshold_acc + '%';
+                }
+            } catch (error) {
+                console.warn('Model metrics JSON not found, using defaults');
             }
         }
 

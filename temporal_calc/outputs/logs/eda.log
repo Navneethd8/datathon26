@@ -1,0 +1,132 @@
+Loading data from /Volumes/NavDisk/datathon26/data/Access_to_Everyday_Life_Dataset.csv...
+Loaded 81,973 records with 50 neighborhoods
+
+============================================================
+ Summary Statistics
+============================================================
+
+Total Records: 81,973
+Total Neighborhoods: 50
+Label Types: 7
+
+
+--- Severity Distribution ---
+
+count    79722.000000
+mean         2.807531
+std          1.312686
+min          1.000000
+25%          2.000000
+50%          3.000000
+75%          4.000000
+max          5.000000
+Name: properties/severity, dtype: float64
+
+
+--- Records per Neighborhood ---
+
+count       50.000000
+mean      1639.460000
+std       1810.253418
+min        127.000000
+25%        706.000000
+50%       1181.000000
+75%       1765.000000
+max      11481.000000
+Name: count, dtype: float64
+
+============================================================
+ Q1: Barrier Type Frequency Analysis
+============================================================
+
+                       Count  Percentage
+properties/label_type                   
+CurbRamp               27175       33.15
+NoSidewalk             19133       23.34
+NoCurbRamp             16947       20.67
+SurfaceProblem         12681       15.47
+Obstacle                5693        6.94
+Occlusion                253        0.31
+Other                     91        0.11
+
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/q1_barrier_type_frequency.png
+
+============================================================
+ Q2: Temporary vs Permanent Barriers
+============================================================
+
+Permanent barriers: 81,202 (99.1%)
+Temporary barriers: 771 (0.9%)
+
+
+--- Top 10 Neighborhoods by Temporary Barrier Ratio ---
+
+                           Temporary  Total  Permanent  Temp_Ratio
+properties/neighborhood                                           
+South Lake Union                  58    756        698        7.67
+Pike-Market                        7    140        133        5.00
+West Queen Anne                   38   1086       1048        3.50
+University District               67   2035       1968        3.29
+Belltown                          35   1067       1032        3.28
+Fremont                           59   2133       2074        2.77
+Central Business District         21    842        821        2.49
+Yesler Terrace                    11    453        442        2.43
+Pioneer Square                    13    539        526        2.41
+Lower Queen Anne                  20    946        926        2.11
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/q2_temp_vs_permanent.png
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/q2_geographic_distribution.png
+
+============================================================
+ Q3: Accessibility Score by Neighborhood
+============================================================
+
+
+--- Top 10 Neighborhoods with WORST Accessibility ---
+
+                         AccessibilityScore  Rank  BarrierCount  MeanSeverity
+properties/neighborhood                                                      
+Ravenna                               84.84     1          5282      3.410640
+Whittier Heights                      83.77     2          2684      3.420268
+View Ridge                            81.32     3          1699      3.396704
+Industrial District                   78.13     4         11481      3.280899
+Sand Point                            77.71     5           188      3.287234
+Interbay                              77.44     6           637      3.329670
+Wallingford                           75.66     7          3470      3.247839
+Sunset Hill                           71.45     8          1464      2.828552
+Windermere                            69.24     9           696      2.992816
+Roosevelt                             67.98    10          2634      3.074032
+
+
+--- Top 10 Neighborhoods with BEST Accessibility ---
+
+                           AccessibilityScore  Rank  BarrierCount  MeanSeverity
+properties/neighborhood                                                        
+Lower Queen Anne                        27.61    41           946      2.109937
+Atlantic                                26.02    42          1165      2.374249
+International District                  22.48    43           452      2.099558
+Pike-Market                             20.68    44           140      1.942857
+Westlake                                19.76    45           127      2.086614
+South Lake Union                        18.53    46           756      1.887566
+Pioneer Square                          14.87    47           539      1.768089
+Central Business District               10.12    48           842      1.627078
+Belltown                                 9.12    49          1067      1.784442
+First Hill                               7.80    50           736      2.455163
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/q3_accessibility_scores.png
+
+Saved accessibility scores to /Volumes/NavDisk/datathon26/temporal_calc/outputs/accessibility_scores.csv
+
+============================================================
+ Creating Synthetic Time Bins
+============================================================
+
+Created 200 time bins
+Records per bin: ~409
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/synthetic_time_series.png
+Saved: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/barrier_types_over_time.png
+
+============================================================
+ EDA Complete
+============================================================
+
+All plots saved to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots
+Accessibility scores saved to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/accessibility_scores.csv

@@ -1,21 +1,4 @@
-neighborhood,current_score,predicted_step1,predicted_step2,predicted_step3,avg_prediction,predicted_change,risk_level
-View Ridge,117.19,67.55,47.91,78.29,64.58,-52.6,High
-Industrial District,119.48,106.51,84.6,39.13,76.75,-42.74,High
-Wallingford,134.26,122.64,98.7,96.59,105.98,-28.28,High
-Whittier Heights,105.39,89.75,82.15,83.16,85.02,-20.37,High
-Sunset Hill,90.0,83.72,75.44,80.97,80.04,-9.96,Medium
-Stevens,94.17,85.12,86.16,82.31,84.53,-9.64,Medium
-Ravenna,88.75,102.57,87.05,55.39,81.67,-7.08,Medium
-North Beacon Hill,109.43,112.32,111.3,93.62,105.75,-3.68,Low
-University District,111.47,98.45,123.43,104.57,108.82,-2.65,Low
-Green Lake,105.84,111.91,109.47,93.17,104.85,-0.99,Low
-Briarcliff,82.28,86.86,80.28,79.7,82.28,0.01,Low
-Mount Baker,104.1,114.22,106.83,92.42,104.49,0.39,Low
-Broadway,109.28,109.9,116.59,110.65,112.38,3.1,Low
-Loyal Heights,112.6,117.75,119.77,113.28,116.93,4.33,Low
-Fremont,111.57,113.36,125.85,118.0,119.07,7.5,Low
-Leschi,102.55,114.65,108.14,109.76,110.85,8.3,Low
-Phinney Ridge,90.61,97.28,106.46,106.22,103.32,12.71,Low
-Roosevelt,90.0,116.48,115.57,88.09,106.71,16.71,Low
-Madrona,95.26,114.19,119.75,113.2,115.72,20.46,Low
-North Queen Anne,99.93,113.53,128.93,123.36,121.94,22.0,Low
+neighborhood,current_score,avg_prediction,predicted_change,risk_level
+Industrial District,78.06585426330567,71.53290367126465,-6.532950592041016,High
+Ravenna,96.24129104614258,120.20072937011719,23.95943832397461,High
+Wallingford,132.52793884277344,144.64527130126953,12.117332458496094,High
