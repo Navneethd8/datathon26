@@ -1,0 +1,44 @@
+/Volumes/NavDisk/datathon26/temporal_calc/feature_engineering.py:190: DeprecationWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  aggregated = df.groupby(['time_bin', NEIGHBORHOOD_COL]).apply(
+
+============================================================
+ Feature Engineering Pipeline
+============================================================
+
+Loading dataset...
+Loaded 81,973 records, 200 time bins
+
+--- Computing Features per (time_bin, neighborhood) ---
+
+Aggregated to 249 rows
+Shape: (249, 16)
+Adding temporal features (lags and rolling averages)...
+Adding time position features...
+Adding geospatial and demographic features...
+  Added 7 geospatial/demographic features
+
+--- Feature Summary ---
+
+Total features: 51
+Features: ['barrier_count', 'severity_mean', 'severity_max', 'severity_std', 'temp_ratio', 'prop_CurbRamp', 'prop_NoSidewalk', 'prop_NoCurbRamp', 'prop_SurfaceProblem', 'prop_Obstacle', 'prop_Occlusion', 'prop_Other', 'weighted_impact', 'accessibility_score', 'barrier_count_lag1', 'barrier_count_lag2', 'barrier_count_lag3', 'barrier_count_roll3', 'barrier_count_roll5', 'severity_mean_lag1', 'severity_mean_lag2', 'severity_mean_lag3', 'severity_mean_roll3', 'severity_mean_roll5', 'accessibility_score_lag1', 'accessibility_score_lag2', 'accessibility_score_lag3', 'accessibility_score_roll3', 'accessibility_score_roll5', 'temp_ratio_lag1', 'temp_ratio_lag2', 'temp_ratio_lag3', 'temp_ratio_roll3', 'temp_ratio_roll5', 'time_position', 'time_sin', 'time_cos', 'barriers_per_km2', 'area_km2', 'population', 'median_income', 'pct_minority', 'pct_elderly', 'equity_concern_score', 'barriers_per_km2_norm', 'area_km2_norm', 'population_norm', 'median_income_norm', 'pct_minority_norm', 'pct_elderly_norm', 'equity_concern_score_norm']
+
+--- Saving Processed Data ---
+
+Saved to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/processed_timeseries.csv
+
+--- Target Variable (accessibility_score) Statistics ---
+
+count    249.000000
+mean      52.678148
+std       52.942619
+min      -22.083333
+25%      -13.398533
+50%       67.817073
+75%       95.402439
+max      139.364303
+Name: accessibility_score, dtype: float64
+
+============================================================
+ Feature Engineering Complete
+============================================================
+
