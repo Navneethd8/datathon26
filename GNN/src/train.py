@@ -240,6 +240,36 @@ class GNNTrainer:
         
         return loss.item()
     
+    def compute_val_loss_contrastive(self, val_data: Data, val_metadata: 'pd.DataFrame') -> float:
+        """Compute validation loss for contrastive learning"""
+        self.model.eval()
+        
+        # Get embeddings
+        embeddings = self.model(val_data.x, val_data.edge_index, val_data.edge_attr)
+        
+        # Create contrastive pairs
+        pos_pairs, neg_pairs = self.create_contrastive_pairs(val_data, val_metadata, self.config, embeddings.device)
+        
+        # Compute loss
+        loss = self.criterion(embeddings, pos_pairs, neg_pairs)
+        
+        return loss.item()
+    
+    def compute_val_loss_self_supervised(self, val_data: Data) -> float:
+        """Compute validation loss for self-supervised learning"""
+        self.model.eval()
+        
+        # Get embeddings
+        embeddings = self.model(val_data.x, val_data.edge_index, val_data.edge_attr)
+        
+        # Reconstruct features
+        reconstructed = self.decoder(embeddings)
+        
+        # Compute loss
+        loss = self.criterion(reconstructed, val_data.x)
+        
+        return loss.item()
+    
     def create_contrastive_pairs_sampled(self, edge_index: torch.Tensor, metadata: 'pd.DataFrame',
                                        node_indices: torch.Tensor, node_map: dict,
                                        config: Dict, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -291,15 +321,18 @@ class GNNTrainer:
         
         return loss.item()
     
-    def train(self, data: Data, metadata: 'pd.DataFrame',
+    def train(self, train_data: Data, train_metadata: 'pd.DataFrame',
+             val_data: Optional[Data] = None, val_metadata: Optional['pd.DataFrame'] = None,
              num_epochs: Optional[int] = None,
              early_stopping_patience: Optional[int] = None) -> Dict:
         """
         Train the model
         
         Args:
-            data: Graph data
-            metadata: Metadata dataframe
+            train_data: Training graph data
+            train_metadata: Training metadata dataframe
+            val_data: Optional validation graph data
+            val_metadata: Optional validation metadata dataframe
             num_epochs: Number of epochs
             early_stopping_patience: Early stopping patience
             
@@ -310,41 +343,61 @@ class GNNTrainer:
         patience = early_stopping_patience or self.config['training'].get('early_stopping_patience', 10)
         
         # For very large graphs, use CPU to avoid OOM
-        n_nodes = data.x.size(0)
+        n_nodes = train_data.x.size(0)
         if n_nodes > 50000:
             print(f"Large graph detected ({n_nodes} nodes). Using CPU for training to avoid OOM.")
             print("  (Set max_nodes_per_batch in config to use GPU with subgraph sampling)")
             # Temporarily switch to CPU
             self.model.to('cpu')
-            data = data.to('cpu')
+            train_data = train_data.to('cpu')
+            if val_data is not None:
+                val_data = val_data.to('cpu')
             use_cpu = True
         else:
             # Move data to device
-            data = data.to(self.device)
+            train_data = train_data.to(self.device)
+            if val_data is not None:
+                val_data = val_data.to(self.device)
             use_cpu = False
         
-        history = {'train_loss': []}
-        best_loss = float('inf')
+        history = {'train_loss': [], 'val_loss': []}
+        best_val_loss = float('inf')
         patience_counter = 0
         
         print(f"Training on {self.device}")
         print(f"Training method: {self.training_method}")
+        print(f"Training samples: {train_data.num_nodes}, Validation samples: {val_data.num_nodes if val_data is not None else 0}")
         
         for epoch in tqdm(range(num_epochs), desc="Training"):
+            # Training
+            self.model.train()
             if self.training_method == 'contrastive':
-                loss = self.train_epoch_contrastive(data, metadata)
+                train_loss = self.train_epoch_contrastive(train_data, train_metadata)
             elif self.training_method == 'self_supervised':
-                loss = self.train_epoch_self_supervised(data)
+                train_loss = self.train_epoch_self_supervised(train_data)
             else:
                 # Multi-task would need labels - skip for now
-                loss = 0.0
+                train_loss = 0.0
             
-            history['train_loss'].append(loss)
+            history['train_loss'].append(train_loss)
+            
+            # Validation
+            val_loss = None
+            if val_data is not None:
+                self.model.eval()
+                with torch.no_grad():
+                    if self.training_method == 'contrastive':
+                        val_loss = self.compute_val_loss_contrastive(val_data, val_metadata)
+                    elif self.training_method == 'self_supervised':
+                        val_loss = self.compute_val_loss_self_supervised(val_data)
+                
+                if val_loss is not None:
+                    history['val_loss'].append(val_loss)
             
             # Early stopping (disabled if patience is very high, e.g., 999999)
-            if patience < 999999:  # Only do early stopping if not disabled
-                if loss < best_loss:
-                    best_loss = loss
+            if patience < 999999 and val_loss is not None:  # Only do early stopping if not disabled and validation available
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
                     patience_counter = 0
                 else:
                     patience_counter += 1
@@ -353,11 +406,12 @@ class GNNTrainer:
                         break
             else:
                 # Track best loss even without early stopping
-                if loss < best_loss:
-                    best_loss = loss
-            
+                if train_loss < best_val_loss:
+                    best_val_loss = train_loss
+        
             if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{num_epochs}, Loss: {loss:.4f}")
+                val_str = f", Val Loss: {val_loss:.4f}" if val_loss is not None else ""
+                print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {train_loss:.4f}{val_str}")
         
         # Move model back to original device if we switched to CPU
         if use_cpu and self.device.type == 'cuda':
@@ -366,13 +420,16 @@ class GNNTrainer:
         
         return history
     
-    def save_model(self, path: str):
+    def save_model(self, path: str, history: Optional[Dict] = None):
         """Save model to file"""
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        torch.save({
+        save_dict = {
             'model_state_dict': self.model.state_dict(),
             'config': self.config,
-        }, path)
+        }
+        if history:
+            save_dict['history'] = history
+        torch.save(save_dict, path)
         print(f"Model saved to {path}")
     
     def load_model(self, path: str):

@@ -109,7 +109,7 @@ def update_results_summary(metrics: dict = None):
     with open(summary_path, 'w') as f:
         f.write(content)
     
-    print(f"✅ Updated {summary_path}")
+    print(f" Updated {summary_path}")
 
 
 if __name__ == '__main__':
