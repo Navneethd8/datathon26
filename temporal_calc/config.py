@@ -5,9 +5,7 @@ Contains all hyperparameters, paths, and settings.
 import os
 from pathlib import Path
 
-# ============================================================================
 # Paths
-# ============================================================================
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR.parent / "data"
 OUTPUT_DIR = BASE_DIR / "outputs"
@@ -23,9 +21,7 @@ PROCESSED_DATA_PATH = OUTPUT_DIR / "processed_timeseries.csv"
 for dir_path in [OUTPUT_DIR, PLOTS_DIR, EVAL_DIR, CHECKPOINT_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
-# ============================================================================
 # Data Configuration
-# ============================================================================
 # Number of synthetic time bins to create from attribute_id ordering
 # Higher = more granular time series, more training data per neighborhood
 NUM_TIME_BINS = 200  # Increased from 50 for denser data
@@ -55,9 +51,7 @@ BARRIER_WEIGHTS = {
     "Other": 1.0
 }
 
-# ============================================================================
 # Model Configuration (Optimized for M1 Mac 8GB RAM)
-# ============================================================================
 MODEL_CONFIG = {
     "d_model": 128,          # Embedding dimension (increased from 64)
     "n_heads": 8,            # Number of attention heads (increased from 4)
@@ -67,9 +61,7 @@ MODEL_CONFIG = {
     "max_seq_len": 30,       # Maximum sequence length
 }
 
-# ============================================================================
 # Training Configuration
-# ============================================================================
 TRAIN_CONFIG = {
     "seq_len": 8,            # Input sequence length (reduced for more samples)
     "pred_len": 1,           # Prediction horizon
@@ -81,9 +73,7 @@ TRAIN_CONFIG = {
     "seed": 42,
 }
 
-# ============================================================================
 # Device Configuration
-# ============================================================================
 def get_device():
     """Get the best available device (MPS for M1 Mac, else CPU)."""
     import torch
