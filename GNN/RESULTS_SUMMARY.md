@@ -24,7 +24,7 @@ The method produces spatially coherent hotspot regions that capture all high-sev
 
 ---
 
-## Approach: Hybrid Spatial Modeling + Clustering
+### Performance Winner: Hybrid GNN Modeling + Clustering
 
 This approach integrates multiple complementary components.
 
