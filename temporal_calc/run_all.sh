@@ -12,9 +12,7 @@ LOG_DIR="$OUTPUT_DIR/logs"
 
 mkdir -p "$LOG_DIR"
 
-echo "=========================================================="
 echo "STARTING END-TO-END ACCESSIBILITY PIPELINE"
-echo "=========================================================="
 date
 
 cd "$PROJECT_DIR"
@@ -40,10 +38,7 @@ echo -e "\n[4/4] Generating Map Data (generate_map_data.py)..."
 python3 generate_map_data.py > "$LOG_DIR/generate_map_data.log" 2>&1
 echo "Map Data Generated. Saved to $OUTPUT_DIR/map_data.json"
 
-echo -e "\n=========================================================="
 echo "PIPELINE SUCCESSFUL!"
-echo "=========================================================="
 echo "You can now view the results by opening:"
 echo "  $PROJECT_DIR/dashboard.html"
-echo "=========================================================="
 date

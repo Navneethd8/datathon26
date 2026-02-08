@@ -59,9 +59,7 @@ def main():
     print(f"Using device: {device}")
     
     # 1. Data Preprocessing
-    print("\n" + "="*50)
-    print("Step 1: Data Preprocessing")
-    print("="*50)
+    print("\nStep 1: Data Preprocessing")
     preprocessor = DataPreprocessor(config)
     features, metadata = preprocessor.process()
     print(f"Preprocessed {len(features)} data points")
@@ -70,24 +68,18 @@ def main():
     coords = metadata[['lon', 'lat']].values
     
     # 2. Graph Construction
-    print("\n" + "="*50)
-    print("Step 2: Graph Construction")
-    print("="*50)
+    print("\nStep 2: Graph Construction")
     graph_builder = GraphBuilder(config)
     graph_data = graph_builder.build_graph(coords, features, metadata)
     print(f"Graph constructed: {graph_data.num_nodes} nodes, {graph_data.num_edges} edges")
     
     # 2.5. Data Splitting
-    print("\n" + "="*50)
-    print("Step 2.5: Data Splitting")
-    print("="*50)
+    print("\nStep 2.5: Data Splitting")
     data_splitter = DataSplitter(config)
     graph_splits, metadata_splits = data_splitter.split_graph_data(graph_data, metadata)
     
     # 3. Model Setup
-    print("\n" + "="*50)
-    print("Step 3: Model Setup")
-    print("="*50)
+    print("\nStep 3: Model Setup")
     input_dim = features.shape[1]
     model = GNNModel(input_dim, config['model'])
     print(f"Model created: {config['model']['architecture']}")
@@ -99,9 +91,8 @@ def main():
     model_path = Path(__file__).parent.parent / model_path
     
     if args.train or not model_path.exists():
-        print("\n" + "="*50)
-        print("Step 4: Training")
-        print("="*50)
+        # 4. Training
+        print("\nStep 4: Training")
         history = trainer.train(
             graph_splits['train'], 
             metadata_splits['train'],
@@ -115,9 +106,7 @@ def main():
         trainer.load_model(str(model_path))
     
     # 5. Feature Extraction (on test set for evaluation)
-    print("\n" + "="*50)
-    print("Step 5: Feature Extraction & Aggregation")
-    print("="*50)
+    print("\nStep 5: Feature Extraction & Aggregation")
     feature_extractor = FeatureExtractor(model, config, device)
     
     # Extract embeddings on test set for evaluation
@@ -136,9 +125,7 @@ def main():
     print(f"Extracted and aggregated embeddings: {aggregated_embeddings.shape} (test set)")
     
     # 6. Hotspot Scoring (on test set)
-    print("\n" + "="*50)
-    print("Step 6: Hotspot Scoring (Test Set)")
-    print("="*50)
+    print("\nStep 6: Hotspot Scoring (Test Set)")
     hotspot_scorer = HotspotScorer(config)
     risk_scores, score_components = hotspot_scorer.score(
         metadata_splits['test'], aggregation_metadata, aggregated_embeddings
@@ -146,9 +133,7 @@ def main():
     print(f"Computed risk scores for {len(risk_scores)} spatial units")
     
     # 7. Hotspot Detection (on test set)
-    print("\n" + "="*50)
-    print("Step 7: Hotspot Detection (Test Set)")
-    print("="*50)
+    print("\nStep 7: Hotspot Detection (Test Set)")
     hotspot_detector = HotspotDetector(config)
     aggregation_coords = aggregation_metadata[['center_lon', 'center_lat']].values
     hotspot_results = hotspot_detector.detect_hotspots(
@@ -160,9 +145,8 @@ def main():
     # 8. Evaluation (on test set)
     metrics = {}
     if args.eval:
-        print("\n" + "="*50)
-        print("Step 8: Evaluation (Test Set)")
-        print("="*50)
+        # 8. Evaluation (on test set)
+        print("\nStep 8: Evaluation (Test Set)")
         evaluator = Evaluator(config)
         metrics = evaluator.evaluate(
             aggregated_embeddings,
@@ -214,9 +198,7 @@ def main():
     
     # 9. Visualization (on full data for better visualization)
     if args.visualize:
-        print("\n" + "="*50)
-        print("Step 9: Visualization (Full Data)")
-        print("="*50)
+        print("\nStep 9: Visualization (Full Data)")
         output_dir = Path(config['paths']['output_dir'])
         output_dir = Path(__file__).parent.parent / output_dir
         visualizer = Visualizer(config, str(output_dir))
@@ -236,9 +218,8 @@ def main():
     
     # 10. Create Dashboards
     if args.eval:
-        print("\n" + "="*50)
-        print("Step 10: Creating Dashboards")
-        print("="*50)
+        # 10. Create Dashboards
+        print("\nStep 10: Creating Dashboards")
         dashboard_dir = Path(__file__).parent.parent / config['paths']['output_dir'] / 'dashboards'
         dashboard = ModelDashboard(str(dashboard_dir))
         
@@ -254,9 +235,8 @@ def main():
     
     # 11. Baseline Comparison
     if args.eval:
-        print("\n" + "="*50)
-        print("Step 11: Baseline Comparison")
-        print("="*50)
+        # 11. Baseline Comparison
+        print("\nStep 11: Baseline Comparison")
         baseline_comparison = BaselineComparison(config)
         
         # Prepare GNN results (using test set results)
@@ -318,9 +298,7 @@ def main():
         from .update_results_with_baselines import update_results_summary_with_baselines
         update_results_summary_with_baselines()
     
-    print("\n" + "="*50)
-    print("Pipeline Complete!")
-    print("="*50)
+    print("\nPipeline Complete!")
 
 
 if __name__ == '__main__':
