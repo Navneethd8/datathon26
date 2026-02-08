@@ -14,34 +14,36 @@ Applying StandardScaler normalization...
 Transformer params: 857,091
 
 --- Training Transformer ---
-  Epoch   0: Loss=1.2417, MAE=73.68, LR=5.00e-06
-  Epoch  20: Loss=0.1927, MAE=30.41, LR=1.00e-04
-  Epoch  40: Loss=0.0682, MAE=18.31, LR=9.67e-05
-  Epoch  60: Loss=0.1036, MAE=21.45, LR=8.77e-05
-  Epoch  80: Loss=0.0538, MAE=15.85, LR=7.42e-05
-  Epoch 100: Loss=0.0587, MAE=17.20, LR=5.78e-05
-  Early stopping at epoch 108
-  Best epoch: 68
+  Epoch   0: Loss=0.8222, MAE=70.39, LR=5.00e-06
+  Epoch  20: Loss=0.2450, MAE=35.25, LR=1.00e-04
+  Epoch  40: Loss=0.1509, MAE=27.96, LR=9.67e-05
+  Epoch  60: Loss=0.0844, MAE=20.68, LR=8.77e-05
+  Epoch  80: Loss=0.0794, MAE=19.79, LR=7.42e-05
+  Epoch 100: Loss=0.0774, MAE=17.28, LR=5.78e-05
+  Epoch 120: Loss=0.1026, MAE=22.09, LR=4.05e-05
+  Early stopping at epoch 135
+  Best epoch: 95
   Generating neighborhood risk forecasts...
   Saved neighborhood forecasts to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/neighborhood_risk_forecast.csv
-  → Transformer: R²=0.8372, PctAcc=57.92%
+  → Transformer: R²=0.7765, PctAcc=58.74%
 
 ==================== LSTM PIPELINE ====================
 LSTM params: 187,332
 
 --- Training LSTM ---
-  Epoch   0: Loss=0.7265, MAE=61.89, LR=3.33e-05
-  Epoch  20: Loss=0.3112, MAE=33.43, LR=4.98e-04
-  Epoch  40: Loss=0.1855, MAE=21.14, LR=4.56e-04
-  Epoch  60: Loss=0.1905, MAE=22.17, LR=3.70e-04
-  Early stopping at epoch 77
-  Best epoch: 42
-  → LSTM: R²=0.7893, PctAcc=60.67%
+  Epoch   0: Loss=0.7529, MAE=63.03, LR=3.33e-05
+  Epoch  20: Loss=0.3105, MAE=30.90, LR=4.98e-04
+  Epoch  40: Loss=0.2127, MAE=20.70, LR=4.56e-04
+  Epoch  60: Loss=0.1833, MAE=21.66, LR=3.70e-04
+  Epoch  80: Loss=0.1884, MAE=22.21, LR=2.59e-04
+  Early stopping at epoch 96
+  Best epoch: 61
+  → LSTM: R²=0.7532, PctAcc=48.73%
 
 ==================== XGBOOST PIPELINE ====================
 
 --- Training Tuned XGBoost ---
-  XGBoost: MAE=40.69, RMSE=51.25, R²=0.1008, PctAcc=-23.91%, ThreshAcc=0.00%
+  XGBoost: MAE=41.54, RMSE=52.27, R²=0.0648, PctAcc=-26.39%, ThreshAcc=3.70%
 
 Saved comparison plot: /Volumes/NavDisk/datathon26/temporal_calc/outputs/plots/max_performance_comparison.png
 Saved model metrics summary to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/model_results.json
@@ -52,9 +54,9 @@ Saved model metrics summary to: /Volumes/NavDisk/datathon26/temporal_calc/output
 
 Model                  MAE         R²       PctAcc    ThreshAcc
 -----------------------------------------------------------------
-Transformer          16.01     0.8372       57.92%       55.56%
-LSTM                 19.13     0.7893       60.67%       48.15%
-XGBoost              40.69     0.1008      -23.91%        0.00%
+Transformer          15.80     0.7765       58.74%       70.37%
+LSTM                 21.40     0.7532       48.73%       40.74%
+XGBoost              41.54     0.0648      -26.39%        3.70%
 
-🏆 PERFORMANCE WINNER: Transformer (R²=0.8372)
+PERFORMANCE WINNER: Transformer (R²=0.7765)
 ===========================================================================

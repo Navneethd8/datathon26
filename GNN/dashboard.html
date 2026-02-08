@@ -370,14 +370,14 @@
 
 <body>
     <header class="header">
-        <h1>GNN Accessibility Hotspot Detection</h1>
-        <p>Graph Neural Network-based Spatial Hotspot Identification</p>
+        <h1>Seattle Accessibility Hotspot Detection</h1>
+        <p>Graph Neural Network (GAT) Analysis & Hotspot Identification</p>
     </header>
 
     <nav class="nav">
         <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
         <button class="nav-btn" onclick="showSection('map')">Interactive Map</button>
-        <button class="nav-btn" onclick="showSection('baselines')">Baseline Comparison</button>
+        <button class="nav-btn" onclick="showSection('analysis')">Analysis</button>
         <button class="nav-btn" onclick="showSection('model')">Model</button>
         <button class="nav-btn" onclick="showSection('evaluation')">Evaluation</button>
     </nav>
@@ -419,22 +419,49 @@
 
             <div class="card">
                 <h2>Project Summary</h2>
-                <p>This dashboard presents an analysis of accessibility hotspot detection using Graph Neural Networks (GNN). The GAT-based model identifies high-risk accessibility hotspots by combining spatial modeling with graph-based learning. Evaluation is performed on a held-out test set (70/15/15 train/val/test split).</p>
+                <p>This dashboard presents an analysis of accessibility hotspot detection using Graph Neural Networks
+                    (GNN). The GAT-based model identifies high-risk accessibility hotspots by combining spatial modeling
+                    with graph-based learning. Evaluation is performed on a held-out test set (70/15/15 train/val/test
+                    split).</p>
 
                 <h3>ML Hypothesis</h3>
-                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
-                    <strong>Hypothesis:</strong> Accessibility issues exhibit spatial dependencies. Nearby issues may share common causes (shared infrastructure, neighborhood characteristics, urban planning patterns). Treating locations as independent points (as in KDE, thresholding) may miss these contextual relationships. A graph-based approach explicitly models spatial neighborhoods, allowing the model to learn representations that encode these dependencies. However, this requires careful graph construction (KNN k=15 chosen empirically) and comes with computational overhead. The low Jaccard similarity (0.01-0.05) with baselines suggests the GNN identifies different patterns, though this could also reflect parameter sensitivity rather than capturing true underlying structure.
+                <p
+                    style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                    <strong>Hypothesis:</strong> Accessibility issues exhibit spatial dependencies. Nearby issues may
+                    share common causes (shared infrastructure, neighborhood characteristics, urban planning patterns).
+                    Treating locations as independent points (as in KDE, thresholding) may miss these contextual
+                    relationships. A graph-based approach explicitly models spatial neighborhoods, allowing the model to
+                    learn representations that encode these dependencies. However, this requires careful graph
+                    construction (KNN k=15 chosen empirically) and comes with computational overhead. The low Jaccard
+                    similarity (0.01-0.05) with baselines suggests the GNN identifies different patterns, though this
+                    could also reflect parameter sensitivity rather than capturing true underlying structure.
                 </p>
 
                 <h3>Why Graph Structure is Essential</h3>
-                <p>Accessibility barriers may exhibit spatial dependencies. Nearby issues may share common causes (infrastructure age, neighborhood planning, terrain). Classical spatial statistics (KDE, Getis-Ord Gi*) treat each location independently, which may miss these contextual patterns. Graph structure explicitly models spatial neighborhoods, making these relationships learnable. However, the graph construction itself (KNN k=15, distance thresholds) introduces assumptions that affect the learned representations. Alternative graph constructions (radius-based, adaptive k) were not exhaustively explored due to 24-hour datathon constraints.</p>
+                <p>Accessibility barriers may exhibit spatial dependencies. Nearby issues may share common causes
+                    (infrastructure age, neighborhood planning, terrain). Classical spatial statistics (KDE, Getis-Ord
+                    Gi*) treat each location independently, which may miss these contextual patterns. Graph structure
+                    explicitly models spatial neighborhoods, making these relationships learnable. However, the graph
+                    construction itself (KNN k=15, distance thresholds) introduces assumptions that affect the learned
+                    representations. Alternative graph constructions (radius-based, adaptive k) were not exhaustively
+                    explored due to 24-hour datathon constraints.</p>
 
                 <h3>Key Features</h3>
                 <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
-                    <li><strong>Graph Neural Networks:</strong> GAT architecture (3 layers, 4 attention heads) learns spatial-contextual patterns from KNN graph (k=15). The attention mechanism allows nodes to weight neighbor contributions, potentially capturing multi-scale relationships.</li>
-                    <li><strong>Hotspot Detection:</strong> Identifies 255 high-risk hotspots on test set with 100% coverage of high-severity problems (severity ≥ 4). Hotspot boundaries determined by DBSCAN clustering on learned embeddings, which is sensitive to parameters (eps, min_samples) selected empirically.</li>
-                    <li><strong>Spatial Coherence:</strong> Moran's I = 0.2376 indicates moderate positive spatial autocorrelation, suggesting meaningful spatial clustering without being overly conservative (Getis-Ord Gi* achieves 0.75 coherence but only 17 hotspots).</li>
-                    <li><strong>Baseline Comparison:</strong> Low Jaccard similarity (0.01-0.05) with 8 baseline methods suggests the GNN identifies different spatial patterns than classical spatial statistics or clustering alone. This may reflect learned spatial-contextual relationships, though it could also indicate overfitting or parameter sensitivity. Further validation would be needed.</li>
+                    <li><strong>Graph Neural Networks:</strong> GAT architecture (3 layers, 4 attention heads) learns
+                        spatial-contextual patterns from KNN graph (k=15). The attention mechanism allows nodes to
+                        weight neighbor contributions, potentially capturing multi-scale relationships.</li>
+                    <li><strong>Hotspot Detection:</strong> Identifies 255 high-risk hotspots on test set with 100%
+                        coverage of high-severity problems (severity ≥ 4). Hotspot boundaries determined by DBSCAN
+                        clustering on learned embeddings, which is sensitive to parameters (eps, min_samples) selected
+                        empirically.</li>
+                    <li><strong>Spatial Coherence:</strong> Moran's I = 0.2376 indicates moderate positive spatial
+                        autocorrelation, suggesting meaningful spatial clustering without being overly conservative
+                        (Getis-Ord Gi* achieves 0.75 coherence but only 17 hotspots).</li>
+                    <li><strong>Baseline Comparison:</strong> Low Jaccard similarity (0.01-0.05) with 8 baseline methods
+                        suggests the GNN identifies different spatial patterns than classical spatial statistics or
+                        clustering alone. This may reflect learned spatial-contextual relationships, though it could
+                        also indicate overfitting or parameter sensitivity. Further validation would be needed.</li>
                 </ul>
             </div>
 
@@ -444,7 +471,8 @@
                     <div class="caption">Node Embeddings Visualization</div>
                 </div>
                 <div class="image-card">
-                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves" onerror="this.style.display='none'">
+                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves"
+                        onerror="this.style.display='none'">
                     <div class="caption">Training Progress</div>
                 </div>
             </div>
@@ -454,7 +482,8 @@
         <section id="map" class="section">
             <div class="card">
                 <h2>Interactive Hotspot Map</h2>
-                <p>Explore barrier locations, grid cells, and detected hotspots across the study area. Use the layer controls above to switch views.</p>
+                <p>Explore barrier locations, grid cells, and detected hotspots across the study area. Use the layer
+                    controls above to switch views.</p>
 
                 <div id="mapContainer"></div>
 
@@ -522,16 +551,29 @@
                 <p>Comparison of the GNN approach against classical spatial statistics and clustering baselines.</p>
 
                 <h3>Understanding the Tradeoff</h3>
-                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--secondary);">
-                    <strong>Jaccard vs. Moran's I Tradeoff:</strong> Methods that achieve high spatial coherence (like Getis-Ord Gi* with Moran's I = 0.75) identify very few hotspots (17), while methods that find more hotspots often sacrifice spatial coherence. The GNN approach identifies 255 hotspots while maintaining moderate spatial coherence (0.24), suggesting a balance between coverage and spatial coherence. However, this balance depends on DBSCAN clustering parameters (eps, min_samples) and risk score thresholds, which were selected empirically. The tradeoff is not necessarily optimal. It reflects our parameter choices rather than an inherent property of the GNN approach.
+                <p
+                    style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--secondary);">
+                    <strong>Jaccard vs. Moran's I Tradeoff:</strong> Methods that achieve high spatial coherence (like
+                    Getis-Ord Gi* with Moran's I = 0.75) identify very few hotspots (17), while methods that find more
+                    hotspots often sacrifice spatial coherence. The GNN approach identifies 255 hotspots while
+                    maintaining moderate spatial coherence (0.24), suggesting a balance between coverage and spatial
+                    coherence. However, this balance depends on DBSCAN clustering parameters (eps, min_samples) and risk
+                    score thresholds, which were selected empirically. The tradeoff is not necessarily optimal. It
+                    reflects our parameter choices rather than an inherent property of the GNN approach.
                 </p>
 
                 <h3>What the GNN Learns That Baselines Don't</h3>
-                <p style="margin-bottom: 1rem;">The low Jaccard similarity (0.01-0.05) between GNN and all baselines suggests the GNN identifies different spatial patterns than classical methods. This may reflect learned spatial-contextual relationships, though it could also indicate parameter sensitivity or overfitting. The patterns identified include:</p>
+                <p style="margin-bottom: 1rem;">The low Jaccard similarity (0.01-0.05) between GNN and all baselines
+                    suggests the GNN identifies different spatial patterns than classical methods. This may reflect
+                    learned spatial-contextual relationships, though it could also indicate parameter sensitivity or
+                    overfitting. The patterns identified include:</p>
                 <ul style="margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
-                    <li><strong>Neighborhood-level context:</strong> How accessibility issues cluster within neighborhoods due to shared infrastructure and planning</li>
-                    <li><strong>Multi-scale relationships:</strong> Patterns that emerge from combining local density, regional severity, and city-wide diversity</li>
-                    <li><strong>Learned spatial embeddings:</strong> Representations that encode complex relationships beyond simple distance or feature combinations</li>
+                    <li><strong>Neighborhood-level context:</strong> How accessibility issues cluster within
+                        neighborhoods due to shared infrastructure and planning</li>
+                    <li><strong>Multi-scale relationships:</strong> Patterns that emerge from combining local density,
+                        regional severity, and city-wide diversity</li>
+                    <li><strong>Learned spatial embeddings:</strong> Representations that encode complex relationships
+                        beyond simple distance or feature combinations</li>
                 </ul>
 
                 <table class="data-table">
@@ -589,11 +631,12 @@
                     </tbody>
                 </table>
             </div>
-          
+
 
             <div class="image-grid">
                 <div class="image-card">
-                    <img src="outputs/baseline_comparison/budget_coverage.png" alt="Budget Coverage" onerror="this.style.display='none'">
+                    <img src="outputs/baseline_comparison/budget_coverage.png" alt="Budget Coverage"
+                        onerror="this.style.display='none'">
                     <div class="caption">Budget vs Coverage Analysis</div>
                 </div>
             </div>
@@ -606,11 +649,16 @@
                 <p>Graph Attention Network (GAT) with contrastive learning for spatial hotspot detection.</p>
 
                 <h3>Contrastive Learning Explained</h3>
-                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
-                    <strong>In one sentence:</strong> Contrastive learning teaches the model that nearby locations with similar accessibility issues should have similar embeddings, while distant or dissimilar locations should have different embeddings, without requiring explicit labels about which locations are "hotspots."
+                <p
+                    style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                    <strong>In one sentence:</strong> Contrastive learning teaches the model that nearby locations with
+                    similar accessibility issues should have similar embeddings, while distant or dissimilar locations
+                    should have different embeddings, without requiring explicit labels about which locations are
+                    "hotspots."
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
                     <div>
                         <h3>Architecture</h3>
                         <ul style="margin-left: 1.5rem; line-height: 1.8;">
@@ -645,14 +693,24 @@
                 </div>
 
                 <h3 style="margin-top: 2rem;">Limitations & Future Work</h3>
-                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--warning);">
-                    <p><strong>Limitations:</strong> (1) Hotspot boundaries depend on DBSCAN clustering parameters (eps, min_samples) selected empirically. While we achieve 100% coverage of high-severity issues on the test set, the exact spatial extent of hotspots may vary with different parameters. (2) Graph construction (KNN k=15) was chosen empirically; alternative constructions (radius-based, adaptive k) were not exhaustively explored due to 24-hour datathon constraints. (3) The model was trained on a single train/test split; cross-validation would provide more robust performance estimates but was not feasible within the time constraint. (4) The dataset's crowdsourced nature may introduce reporting biases (e.g., certain neighborhoods may be over-reported) that affect generalizability.</p>
+                <div
+                    style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--warning);">
+                    <p><strong>Limitations:</strong> (1) Hotspot boundaries depend on DBSCAN clustering parameters (eps,
+                        min_samples) selected empirically. While we achieve 100% coverage of high-severity issues on the
+                        test set, the exact spatial extent of hotspots may vary with different parameters. (2) Graph
+                        construction (KNN k=15) was chosen empirically; alternative constructions (radius-based,
+                        adaptive k) were not exhaustively explored due to 24-hour datathon constraints. (3) The model
+                        was trained on a single train/test split; cross-validation would provide more robust performance
+                        estimates but was not feasible within the time constraint. (4) The dataset's crowdsourced nature
+                        may introduce reporting biases (e.g., certain neighborhoods may be over-reported) that affect
+                        generalizability.</p>
                 </div>
             </div>
 
             <div class="image-grid">
                 <div class="image-card">
-                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves" onerror="this.style.display='none'">
+                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves"
+                        onerror="this.style.display='none'">
                     <div class="caption">Training & Validation Loss</div>
                 </div>
                 <div class="image-card">
@@ -666,7 +724,8 @@
         <section id="evaluation" class="section">
             <div class="card">
                 <h2>Evaluation Metrics</h2>
-                <p>Evaluation of model performance on held-out test set (15% of data, 70/15/15 train/val/test split). Metrics computed on test set only to avoid overfitting concerns.</p>
+                <p>Evaluation of model performance on held-out test set (15% of data, 70/15/15 train/val/test split).
+                    Metrics computed on test set only to avoid overfitting concerns.</p>
 
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -708,7 +767,8 @@
 
             <div class="image-grid">
                 <div class="image-card">
-                    <img src="outputs/dashboards/evaluation_dashboard.png" alt="Evaluation Dashboard" onerror="this.style.display='none'">
+                    <img src="outputs/dashboards/evaluation_dashboard.png" alt="Evaluation Dashboard"
+                        onerror="this.style.display='none'">
                     <div class="caption">Evaluation Dashboard</div>
                 </div>
             </div>
@@ -788,14 +848,14 @@
         function updateEvaluationMetrics() {
             if (!gnnResults || !gnnResults.evaluation) return;
             const eval = gnnResults.evaluation;
-            
+
             document.getElementById('eval-hotspots').textContent = eval.n_hotspots || '--';
             document.getElementById('eval-coverage').textContent = eval.coverage ? (eval.coverage.coverage * 100).toFixed(1) + '%' : '--';
             document.getElementById('eval-morans').textContent = eval.morans_i ? eval.morans_i.toFixed(4) : '--';
             document.getElementById('eval-silhouette').textContent = eval.silhouette_score ? eval.silhouette_score.toFixed(4) : '--';
-            
-            const riskDiff = eval.avg_risk_in_hotspots && eval.avg_risk_outside_hotspots 
-                ? (eval.avg_risk_in_hotspots - eval.avg_risk_outside_hotspots).toFixed(4) 
+
+            const riskDiff = eval.avg_risk_in_hotspots && eval.avg_risk_outside_hotspots
+                ? (eval.avg_risk_in_hotspots - eval.avg_risk_outside_hotspots).toFixed(4)
                 : '--';
             document.getElementById('eval-risk-diff').textContent = riskDiff;
 
@@ -893,51 +953,51 @@
             }
 
             const methods = [
-                { 
-                    key: 'gnn', 
-                    name: 'GNN (Our Method)', 
+                {
+                    key: 'gnn',
+                    name: 'GNN (Our Method)',
                     highlight: true,
                     hotspots: metrics.gnn?.n_hotspots ?? 255,
                     jaccard: metrics.gnn?.jaccard_with_gnn ?? 1.0000,
                     coherence: gnnMoransI
                 },
-                { 
-                    key: 'kde', 
+                {
+                    key: 'kde',
                     name: 'KDE (Severity-weighted)',
                     hotspots: metrics.kde?.n_hotspots ?? 77,
                     jaccard: metrics.kde?.jaccard_with_gnn ?? 0.0207,
                     coherence: metrics.kde?.spatial_coherence ?? 0.0230
                 },
-                { 
-                    key: 'getis_ord', 
+                {
+                    key: 'getis_ord',
                     name: 'Getis-Ord Gi*',
                     hotspots: metrics.getis_ord?.n_hotspots ?? 17,
                     jaccard: metrics.getis_ord?.jaccard_with_gnn ?? 0.0148,
                     coherence: metrics.getis_ord?.spatial_coherence ?? 0.7539
                 },
-                { 
-                    key: 'local_moran', 
+                {
+                    key: 'local_moran',
                     name: "Local Moran's I",
                     hotspots: metrics.local_moran?.n_hotspots ?? 0,
                     jaccard: metrics.local_moran?.jaccard_with_gnn ?? 0.0000,
                     coherence: isNaN(metrics.local_moran?.spatial_coherence) ? 'N/A' : (metrics.local_moran?.spatial_coherence ?? 'N/A')
                 },
-                { 
-                    key: 'simple_threshold', 
+                {
+                    key: 'simple_threshold',
                     name: 'Simple Thresholding',
                     hotspots: metrics.simple_threshold?.n_hotspots ?? 63,
                     jaccard: metrics.simple_threshold?.jaccard_with_gnn ?? 0.0517,
                     coherence: metrics.simple_threshold?.spatial_coherence ?? 0.1685
                 },
-                { 
-                    key: 'dbscan_baseline', 
+                {
+                    key: 'dbscan_baseline',
                     name: 'DBSCAN Baseline',
                     hotspots: metrics.dbscan_baseline?.n_hotspots ?? 85,
                     jaccard: metrics.dbscan_baseline?.jaccard_with_gnn ?? 0.0459,
                     coherence: metrics.dbscan_baseline?.spatial_coherence ?? 0.1685
                 },
-                { 
-                    key: 'node2vec', 
+                {
+                    key: 'node2vec',
                     name: 'Node2Vec + Clustering',
                     hotspots: metrics.node2vec?.n_hotspots ?? 180,
                     jaccard: metrics.node2vec?.jaccard_with_gnn ?? 0.0381,
@@ -947,10 +1007,10 @@
 
             methods.forEach(method => {
                 const rowClass = method.highlight ? 'style="background: rgba(16, 185, 129, 0.15);"' : '';
-                
+
                 // Format Jaccard similarity
                 const jaccard = typeof method.jaccard === 'number' ? method.jaccard.toFixed(4) : method.jaccard;
-                
+
                 // Format spatial coherence
                 let coherence = 'N/A';
                 if (typeof method.coherence === 'number' && !isNaN(method.coherence)) {
@@ -968,7 +1028,7 @@
                     </tr>
                 `;
             });
-            
+
             console.log('Baseline comparison table populated');
         }
 
@@ -999,9 +1059,9 @@
         // Map initialization
         function initMap() {
             if (!mapData) return;
-            
+
             // Center on data
-            const centerLat = mapData.barriers.length > 0 
+            const centerLat = mapData.barriers.length > 0
                 ? mapData.barriers.reduce((sum, b) => sum + b.lat, 0) / mapData.barriers.length
                 : 47.6062;
             const centerLng = mapData.barriers.length > 0
@@ -1109,4 +1169,3 @@
 </body>
 
 </html>
-

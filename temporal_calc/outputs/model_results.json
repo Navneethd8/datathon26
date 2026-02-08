@@ -1,20 +1,20 @@
 {
     "Transformer": {
-        "mae": 16.01,
-        "r2": 0.8372,
-        "pct_acc": 57.92,
-        "threshold_acc": 55.56
+        "mae": 15.8,
+        "r2": 0.7765,
+        "pct_acc": 58.74,
+        "threshold_acc": 70.37
     },
     "LSTM": {
-        "mae": 19.13,
-        "r2": 0.7893,
-        "pct_acc": 60.67,
-        "threshold_acc": 48.15
+        "mae": 21.4,
+        "r2": 0.7532,
+        "pct_acc": 48.73,
+        "threshold_acc": 40.74
     },
     "XGBoost": {
-        "mae": 40.69,
-        "r2": 0.1008,
-        "pct_acc": -23.91,
-        "threshold_acc": 0.0
+        "mae": 41.54,
+        "r2": 0.0648,
+        "pct_acc": -26.39,
+        "threshold_acc": 3.7
     }
 }
