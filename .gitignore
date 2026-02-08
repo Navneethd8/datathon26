@@ -9,3 +9,9 @@ bun.lockb
 
 # Recursive macOS system files
 **/._*
+
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
