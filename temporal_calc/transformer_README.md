@@ -2,7 +2,7 @@
 
 A lightweight Transformer model for predicting neighborhood accessibility scores based on barrier data.
 
-## 📊 Problem Context
+## Problem Context
 
 This pipeline analyzes the **Access to Everyday Life Dataset** (~82K accessibility barriers across 50 Seattle neighborhoods) to:
 
@@ -10,11 +10,11 @@ This pipeline analyzes the **Access to Everyday Life Dataset** (~82K accessibili
 2. **Compare geographic variation** - How do temporary vs permanent barriers distribute?
 3. **Predict accessibility** - Forecast future neighborhood accessibility scores
 
-> ⚠️ **Data Constraint**: The dataset lacks timestamps. We create synthetic time bins using `attribute_id` ordering as a temporal proxy.
+> **Data Constraint**: The dataset lacks timestamps. We create synthetic time bins using `attribute_id` ordering as a temporal proxy.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -54,7 +54,7 @@ This pipeline analyzes the **Access to Everyday Life Dataset** (~82K accessibili
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # 1. Run EDA (generates plots + accessibility scores)
@@ -79,7 +79,7 @@ python train.py --debug  # Quick test (2 epochs)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 temporal_calc/
@@ -103,7 +103,7 @@ temporal_calc/
 
 ---
 
-## 📈 Key EDA Findings
+## Key EDA Findings
 
 ### Barrier Types (Most Frequent)
 | Type | Count | Percentage |
@@ -125,7 +125,7 @@ temporal_calc/
 
 ---
 
-## 🎯 Features (36 total)
+## Features (36 total)
 
 | Category | Features |
 |----------|----------|
@@ -139,7 +139,7 @@ temporal_calc/
 
 ---
 
-## 📊 Accessibility Score Formula
+## Accessibility Score Formula
 
 ```
 AccessibilityScore = (Σ barrier_weight × severity) / count × 10
@@ -155,7 +155,7 @@ AccessibilityScore = (Σ barrier_weight × severity) / count × 10
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Edit `config.py` to adjust:
 
@@ -179,7 +179,7 @@ TRAIN_CONFIG = {
 
 ---
 
-## 🔧 Technical Notes
+## Technical Notes
 
 - **Device**: Automatically uses MPS (Apple Silicon) if available
 - **Memory**: ~280KB model footprint
@@ -187,7 +187,7 @@ TRAIN_CONFIG = {
 
 ---
 
-## 📚 Dependencies
+## Dependencies
 
 ```
 python >= 3.9

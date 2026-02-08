@@ -361,26 +361,26 @@
 
 <body>
     <header class="header">
-        <h1>🦽 Seattle Accessibility Analysis</h1>
+        <h1>Seattle Accessibility Analysis</h1>
         <p>Transformer-based Temporal Forecasting & Equity Analysis</p>
     </header>
 
     <nav class="nav">
-        <button class="nav-btn active" onclick="showSection('overview')">📊 Overview</button>
-        <button class="nav-btn" onclick="showSection('map')">🗺️ Interactive Map</button>
-        <button class="nav-btn" onclick="showSection('blocks')">🧱 Block Analysis</button>
-        <button class="nav-btn" onclick="showSection('predictions')">🔮 Predictions</button>
-        <button class="nav-btn" onclick="showSection('analysis')">📈 Analysis</button>
-        <button class="nav-btn" onclick="showSection('model')">🤖 Model</button>
+        <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+        <button class="nav-btn" onclick="showSection('map')">Interactive Map</button>
+        <button class="nav-btn" onclick="showSection('blocks')">Block Analysis</button>
+        <button class="nav-btn" onclick="showSection('predictions')">Predictions</button>
+        <button class="nav-btn" onclick="showSection('analysis')">Analysis</button>
+        <button class="nav-btn" onclick="showSection('model')">Model</button>
     </nav>
 
     <!-- Map Layer Controls Bar - visible only when map section is active -->
     <div id="map-layer-bar" class="map-layer-bar" style="display: none;">
         <span class="bar-label">Map Layers:</span>
-        <button class="map-control active" onclick="showLayer('barriers')">📍 Barrier Points</button>
-        <button class="map-control" onclick="showLayer('cells')">🧱 Grid Cells</button>
-        <button class="map-control" onclick="showLayer('heatmap')">🔥 Heatmap</button>
-        <button class="map-control" onclick="showLayer('neighborhoods')">🏘️ Neighborhoods</button>
+        <button class="map-control active" onclick="showLayer('barriers')">Barrier Points</button>
+        <button class="map-control" onclick="showLayer('cells')">Grid Cells</button>
+        <button class="map-control" onclick="showLayer('heatmap')">Heatmap</button>
+        <button class="map-control" onclick="showLayer('neighborhoods')">Neighborhoods</button>
     </div>
 
     <main class="container">
@@ -411,10 +411,10 @@
             </div>
 
             <div class="card">
-                <h2>🎯 Project Summary</h2>
-                <p>This dashboard presents a comprehensive analysis of Seattle's sidewalk accessibility barriers using
-                    transformer-based temporal forecasting. Our model achieves an R² of 0.827, outperforming both LSTM
-                    (0.777) and XGBoost (0.033) baselines.</p>
+                <h2>Project Summary</h2>
+                <p>This dashboard presents an analysis of Seattle's sidewalk accessibility barriers using
+                    transformer-based temporal forecasting. The model achieves an R² of 0.8372 on the test set, higher than LSTM
+                    (0.7893) and XGBoost (0.1008) baselines. <strong>Important limitation:</strong> The dataset lacks true timestamps; synthetic time bins were created from `attribute_id` ordering as a temporal proxy, which may not reflect actual temporal dynamics.</p>
 
                 <h3>Key Features</h3>
                 <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
@@ -440,7 +440,7 @@
         <!-- Interactive Map Section -->
         <section id="map" class="section">
             <div class="card">
-                <h2>🗺️ Interactive Accessibility Map</h2>
+                <h2>Interactive Accessibility Map</h2>
                 <p>Explore barrier locations, grid cell density, and risk levels across Seattle. Use the layer controls
                     above to switch views.</p>
 
@@ -467,7 +467,7 @@
         <!-- Block Analysis Section -->
         <section id="blocks" class="section">
             <div class="card">
-                <h2>🧱 Block-wise Risk Analysis</h2>
+                <h2>Block-wise Risk Analysis</h2>
                 <p>Grid cells (~500m) with risk levels based on barrier density and severity.</p>
 
                 <div class="stats-grid">
@@ -507,8 +507,8 @@
         <!-- Predictions Section -->
         <section id="predictions" class="section">
             <div class="card">
-                <h2>🔮 Neighborhood Risk Forecasts</h2>
-                <p>Multi-step predictions from our Transformer model (R²=0.827)</p>
+                <h2>Neighborhood Risk Forecasts</h2>
+                <p>Multi-step predictions (3 steps ahead) from Transformer model (R²=0.8372 on test set). Predictions are based on synthetic time bins (derived from attribute_id ordering), not true temporal data. Threshold accuracy of 55.56% (±15 points) indicates trend-level rather than point-prediction accuracy.</p>
 
                 <table class="data-table">
                     <thead>
@@ -539,7 +539,7 @@
         <!-- Analysis Section -->
         <section id="analysis" class="section">
             <div class="card">
-                <h2>📈 Geospatial & Equity Analysis</h2>
+                <h2>Geospatial & Equity Analysis</h2>
                 <p>Understanding the relationship between demographics and accessibility barriers.</p>
             </div>
 
@@ -566,8 +566,8 @@
         <!-- Model Section -->
         <section id="model" class="section">
             <div class="card">
-                <h2>🤖 Model Performance Comparison</h2>
-                <p>Our optimized Transformer significantly outperforms traditional approaches.</p>
+                <h2>Model Performance Comparison</h2>
+                <p>Model comparison on test set. Transformer shows higher R² than LSTM and XGBoost. The improvement over LSTM is modest (~6% relative improvement in R²). XGBoost's poor performance (R² = 0.10) suggests it struggles with temporal structure. All models evaluated on same temporal train/test split to preserve temporal structure.</p>
 
                 <table class="data-table">
                     <thead>
@@ -581,21 +581,21 @@
                     </thead>
                     <tbody id="model-metrics-body">
                         <tr>
-                            <td><strong>🥇 Transformer</strong></td>
+                            <td><strong>Transformer</strong></td>
                             <td id="m-trans-mae">18.08</td>
                             <td id="m-trans-r2" class="risk-low">0.8028</td>
                             <td id="m-trans-pct">56.86%</td>
                             <td id="m-trans-hit">59.26%</td>
                         </tr>
                         <tr>
-                            <td>🥈 BiLSTM</td>
+                            <td>BiLSTM</td>
                             <td id="m-lstm-mae">21.12</td>
                             <td id="m-lstm-r2" class="risk-medium">0.7212</td>
                             <td id="m-lstm-pct">50.92%</td>
                             <td id="m-lstm-hit">55.56%</td>
                         </tr>
                         <tr>
-                            <td>🥉 XGBoost</td>
+                            <td>XGBoost</td>
                             <td id="m-xgb-mae">40.27</td>
                             <td id="m-xgb-r2" class="risk-high">0.1157</td>
                             <td id="m-xgb-pct">-22.72%</td>
@@ -613,7 +613,39 @@
             </div>
 
             <div class="card">
-                <h2>⚙️ Architecture Details</h2>
+                <h2>Feature Engineering: Temporal Forecasting</h2>
+                <p>To enable temporal forecasting, we constructed a multivariate time-series dataset from barrier reports. The dataset uses synthetic time bins (derived from `attribute_id` ordering) as a temporal proxy, since true timestamps are unavailable. This limitation should be considered when interpreting results. The pipeline transforms raw barrier reports into a structured format suitable for sequence modeling:</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                    <div>
+                        <h3>Temporal Lags ($t-n$)</h3>
+                        <p style="line-height: 1.7; color: var(--text-secondary);">
+                            Captured historical states for <strong>barrier_count</strong>, <strong>severity</strong>, and <strong>accessibility_score</strong> across 1, 2, and 3-step intervals to identify neighborhood trends.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Rolling Statistics</h3>
+                        <p style="line-height: 1.7; color: var(--text-secondary);">
+                            Calculated <strong>3 and 5-period moving averages</strong> to smooth out noise and identify sustained shifts in urban mobility.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Cyclical Time Encoding</h3>
+                        <p style="line-height: 1.7; color: var(--text-secondary);">
+                            Applied <strong>Sine and Cosine transformations</strong> to normalized time bins. This allows the model to understand periodic patterns by representing time as a continuous circle rather than a linear scale.
+                        </p>
+                    </div>
+                    <div>
+                        <h3>Spatio-Temporal Fusion</h3>
+                        <p style="line-height: 1.7; color: var(--text-secondary);">
+                            Merged historical barrier data with demographic <strong>"equity scores"</strong> (income, population, etc.) to analyze how accessibility degrades over time in vulnerable areas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Architecture Details</h2>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
                     <div>
                         <h3>Transformer Config</h3>
@@ -627,7 +659,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h3>Optimizations</h3>
+                        <h3>Training Configuration</h3>
                         <ul style="margin-left: 1.5rem; line-height: 1.8;">
                             <li>Cosine warmup scheduler</li>
                             <li>Huber loss function</li>
@@ -637,6 +669,15 @@
                             <li>Xavier initialization</li>
                         </ul>
                     </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Limitations & Constraints</h2>
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--warning);">
+                    <p><strong>Data Limitations:</strong> (1) The dataset lacks true timestamps; synthetic time bins were created from `attribute_id` ordering as a temporal proxy. This may not reflect actual temporal dynamics and limits the model's ability to capture real-world temporal patterns. (2) The dataset is crowdsourced, which may introduce reporting biases (e.g., certain neighborhoods may be over-reported) that affect generalizability.</p>
+                    <p style="margin-top: 1rem;"><strong>Evaluation Constraints:</strong> (1) Model evaluated on a single temporal train/test split (not random, to preserve temporal structure). Cross-validation would provide more robust performance estimates but was not feasible within the 24-hour datathon constraint. (2) Feature importance analysis was not conducted; the contribution of individual features (lags, rolling stats, cyclical encoding) to model performance is unknown.</p>
+                    <p style="margin-top: 1rem;"><strong>Model Limitations:</strong> (1) The 55.56% threshold accuracy (±15 points) indicates trend-level rather than point-prediction accuracy. The model is better suited for identifying neighborhoods at risk than exact score prediction. (2) Multi-step forecasting (3 steps ahead) accumulates error; longer horizons would likely show degraded performance. (3) The model architecture (6 layers, 12 heads) was selected empirically; systematic hyperparameter search was not conducted due to time constraints.</p>
                 </div>
             </div>
         </section>
@@ -652,19 +693,79 @@
         let map = null;
         let currentLayer = null;
 
+        // CSV Parser - converts CSV string to array of objects
+        // Handles basic CSV format (may not handle quoted fields with commas)
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n').filter(line => line.trim());
+            if (lines.length < 2) return [];
+            
+            // Parse headers
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const data = [];
+            
+            // Parse data rows
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const obj = {};
+                headers.forEach((header, idx) => {
+                    const value = values[idx] || '';
+                    // Try to parse as number if possible
+                    const numValue = parseFloat(value);
+                    obj[header] = (value === '' || isNaN(numValue)) ? value : numValue;
+                });
+                data.push(obj);
+            }
+            
+            return data;
+        }
+
+        // Load CSV file
+        async function loadCSV(url) {
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                return parseCSV(text);
+            } catch (error) {
+                console.warn(`Error loading CSV from ${url}:`, error);
+                return [];
+            }
+        }
+
         // Load data
         async function loadData() {
+            console.log('Starting data load...');
             try {
                 // Load map data
+                console.log('Loading map_data.json...');
                 const response = await fetch('outputs/map_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 mapData = await response.json();
+                console.log('Map data loaded:', Object.keys(mapData));
                 updateStats();
                 populateTables();
 
                 // Load model metrics
-                loadModelMetrics();
+                console.log('Loading model metrics...');
+                await loadModelMetrics();
+                
+                // Load evaluation metrics
+                console.log('Loading evaluation metrics...');
+                await loadEvaluationMetrics();
+                
+                // Load neighborhood risk forecast
+                console.log('Loading neighborhood forecast...');
+                await loadNeighborhoodForecast();
+                
+                // Load accessibility scores
+                console.log('Loading accessibility scores...');
+                await loadAccessibilityScores();
+                
+                console.log('All data loaded successfully!');
             } catch (error) {
                 console.error('Error loading data:', error);
+                alert('Error loading dashboard data. Check console for details.\n\nMake sure you are accessing via http://localhost:8000/dashboard.html');
             }
         }
 
@@ -694,6 +795,56 @@
                 }
             } catch (error) {
                 console.warn('Model metrics JSON not found, using defaults');
+            }
+        }
+
+        // Load evaluation metrics from CSV
+        async function loadEvaluationMetrics() {
+            try {
+                const data = await loadCSV('outputs/eval/metrics.csv');
+                if (data.length > 0) {
+                    const metrics = data[0];
+                    console.log('Evaluation metrics loaded:', metrics);
+                    // You can use these metrics to update the dashboard
+                    // For example, update a metrics display section if it exists
+                } else {
+                    console.warn('Evaluation metrics CSV is empty');
+                }
+            } catch (error) {
+                console.warn('Evaluation metrics CSV not found or error loading:', error.message);
+            }
+        }
+
+        // Load neighborhood risk forecast
+        async function loadNeighborhoodForecast() {
+            try {
+                const data = await loadCSV('outputs/neighborhood_risk_forecast.csv');
+                if (data.length > 0) {
+                    console.log('Neighborhood forecast loaded:', data.length, 'neighborhoods');
+                    // Data is available for use in predictions table
+                    // The predictions table is already populated from mapData,
+                    // but you could enhance it with this data
+                } else {
+                    console.warn('Neighborhood forecast CSV is empty');
+                }
+            } catch (error) {
+                console.warn('Neighborhood forecast CSV not found or error loading:', error.message);
+            }
+        }
+
+        // Load accessibility scores
+        async function loadAccessibilityScores() {
+            try {
+                const data = await loadCSV('outputs/accessibility_scores.csv');
+                if (data.length > 0) {
+                    console.log('Accessibility scores loaded:', data.length, 'neighborhoods');
+                    // Data is available for use in the dashboard
+                    // You could create a new section or enhance existing displays
+                } else {
+                    console.warn('Accessibility scores CSV is empty');
+                }
+            } catch (error) {
+                console.warn('Accessibility scores CSV not found or error loading:', error.message);
             }
         }
 

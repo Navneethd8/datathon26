@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNN Accessibility Hotspot Detection Dashboard</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Map Layer Bar - below navigation */
+        .map-layer-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card-hover);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 58px;
+            z-index: 999;
+            flex-wrap: wrap;
+        }
+
+        .bar-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        /* Main content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.15);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem;
+            color: var(--secondary);
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* Map container */
+        #mapContainer {
+            height: 600px;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+
+        /* Map controls */
+        .map-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.5rem 0;
+        }
+
+        .map-control {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .map-control:hover,
+        .map-control.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-card-hover);
+            border-radius: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        /* Image gallery */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .image-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: scale(1.02);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-card .caption {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            background: var(--bg-card-hover);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        /* Risk badges */
+        .risk-high {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .risk-medium {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .risk-low {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Highlight row for GNN method */
+        .highlight-row {
+            background: rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .highlight-row:hover {
+            background: rgba(16, 185, 129, 0.25) !important;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>GNN Accessibility Hotspot Detection</h1>
+        <p>Graph Neural Network-based Spatial Hotspot Identification</p>
+    </header>
+
+    <nav class="nav">
+        <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+        <button class="nav-btn" onclick="showSection('map')">Interactive Map</button>
+        <button class="nav-btn" onclick="showSection('baselines')">Baseline Comparison</button>
+        <button class="nav-btn" onclick="showSection('model')">Model</button>
+        <button class="nav-btn" onclick="showSection('evaluation')">Evaluation</button>
+    </nav>
+
+    <!-- Map Layer Controls Bar - visible only when map section is active -->
+    <div id="map-layer-bar" class="map-layer-bar" style="display: none;">
+        <span class="bar-label">Map Layers:</span>
+        <button class="map-control active" onclick="showLayer('barriers')">Barrier Points</button>
+        <button class="map-control" onclick="showLayer('cells')">Grid Cells</button>
+        <button class="map-control" onclick="showLayer('heatmap')">Heatmap</button>
+    </div>
+
+    <main class="container">
+
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-barriers">--</div>
+                    <div class="stat-label">Accessibility Barriers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-cells">--</div>
+                    <div class="stat-label">Grid Cells</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-hotspots">--</div>
+                    <div class="stat-label">Hotspots Detected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-coverage">--</div>
+                    <div class="stat-label">High-Severity Coverage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-morans">--</div>
+                    <div class="stat-label">Moran's I (Spatial Coherence)</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Project Summary</h2>
+                <p>This dashboard presents an analysis of accessibility hotspot detection using Graph Neural Networks (GNN). The GAT-based model identifies high-risk accessibility hotspots by combining spatial modeling with graph-based learning. Evaluation is performed on a held-out test set (70/15/15 train/val/test split).</p>
+
+                <h3>ML Hypothesis</h3>
+                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                    <strong>Hypothesis:</strong> Accessibility issues exhibit spatial dependencies. Nearby issues may share common causes (shared infrastructure, neighborhood characteristics, urban planning patterns). Treating locations as independent points (as in KDE, thresholding) may miss these contextual relationships. A graph-based approach explicitly models spatial neighborhoods, allowing the model to learn representations that encode these dependencies. However, this requires careful graph construction (KNN k=15 chosen empirically) and comes with computational overhead. The low Jaccard similarity (0.01-0.05) with baselines suggests the GNN identifies different patterns, though this could also reflect parameter sensitivity rather than capturing true underlying structure.
+                </p>
+
+                <h3>Why Graph Structure is Essential</h3>
+                <p>Accessibility barriers may exhibit spatial dependencies. Nearby issues may share common causes (infrastructure age, neighborhood planning, terrain). Classical spatial statistics (KDE, Getis-Ord Gi*) treat each location independently, which may miss these contextual patterns. Graph structure explicitly models spatial neighborhoods, making these relationships learnable. However, the graph construction itself (KNN k=15, distance thresholds) introduces assumptions that affect the learned representations. Alternative graph constructions (radius-based, adaptive k) were not exhaustively explored due to 24-hour datathon constraints.</p>
+
+                <h3>Key Features</h3>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; line-height: 1.8;">
+                    <li><strong>Graph Neural Networks:</strong> GAT architecture (3 layers, 4 attention heads) learns spatial-contextual patterns from KNN graph (k=15). The attention mechanism allows nodes to weight neighbor contributions, potentially capturing multi-scale relationships.</li>
+                    <li><strong>Hotspot Detection:</strong> Identifies 255 high-risk hotspots on test set with 100% coverage of high-severity problems (severity ≥ 4). Hotspot boundaries determined by DBSCAN clustering on learned embeddings, which is sensitive to parameters (eps, min_samples) selected empirically.</li>
+                    <li><strong>Spatial Coherence:</strong> Moran's I = 0.2376 indicates moderate positive spatial autocorrelation, suggesting meaningful spatial clustering without being overly conservative (Getis-Ord Gi* achieves 0.75 coherence but only 17 hotspots).</li>
+                    <li><strong>Baseline Comparison:</strong> Low Jaccard similarity (0.01-0.05) with 8 baseline methods suggests the GNN identifies different spatial patterns than classical spatial statistics or clustering alone. This may reflect learned spatial-contextual relationships, though it could also indicate overfitting or parameter sensitivity. Further validation would be needed.</li>
+                </ul>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/embeddings.png" alt="Embeddings" onerror="this.style.display='none'">
+                    <div class="caption">Node Embeddings Visualization</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves" onerror="this.style.display='none'">
+                    <div class="caption">Training Progress</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Map Section -->
+        <section id="map" class="section">
+            <div class="card">
+                <h2>Interactive Hotspot Map</h2>
+                <p>Explore barrier locations, grid cells, and detected hotspots across the study area. Use the layer controls above to switch views.</p>
+
+                <div id="mapContainer"></div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>Low Risk</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f59e0b;"></div>
+                        <span>Medium Risk</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ef4444;"></div>
+                        <span>High Risk / Hotspot</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hotspot Analysis Section -->
+        <section id="hotspots" class="section">
+            <div class="card">
+                <h2>Hotspot Analysis</h2>
+                <p>Top high-risk hotspots identified by the GNN model.</p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value risk-high" id="hotspot-count">--</div>
+                        <div class="stat-label">Total Hotspots</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="hotspot-avg-risk">--</div>
+                        <div class="stat-label">Avg Risk in Hotspots</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="hotspot-coverage">--</div>
+                        <div class="stat-label">High-Severity Coverage</div>
+                    </div>
+                </div>
+
+                <h3>Top High-Risk Hotspots</h3>
+                <table class="data-table" id="hotspots-table">
+                    <thead>
+                        <tr>
+                            <th>Hotspot ID</th>
+                            <th>Neighborhood</th>
+                            <th>Risk Score</th>
+                            <th>Barriers</th>
+                            <th>Avg Severity</th>
+                            <th>Dominant Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hotspots-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Baseline Comparison Section -->
+        <section id="baselines" class="section">
+            <div class="card">
+                <h2>Baseline Comparison</h2>
+                <p>Comparison of the GNN approach against classical spatial statistics and clustering baselines.</p>
+
+                <h3>Understanding the Tradeoff</h3>
+                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--secondary);">
+                    <strong>Jaccard vs. Moran's I Tradeoff:</strong> Methods that achieve high spatial coherence (like Getis-Ord Gi* with Moran's I = 0.75) identify very few hotspots (17), while methods that find more hotspots often sacrifice spatial coherence. The GNN approach identifies 255 hotspots while maintaining moderate spatial coherence (0.24), suggesting a balance between coverage and spatial coherence. However, this balance depends on DBSCAN clustering parameters (eps, min_samples) and risk score thresholds, which were selected empirically. The tradeoff is not necessarily optimal. It reflects our parameter choices rather than an inherent property of the GNN approach.
+                </p>
+
+                <h3>What the GNN Learns That Baselines Don't</h3>
+                <p style="margin-bottom: 1rem;">The low Jaccard similarity (0.01-0.05) between GNN and all baselines suggests the GNN identifies different spatial patterns than classical methods. This may reflect learned spatial-contextual relationships, though it could also indicate parameter sensitivity or overfitting. The patterns identified include:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
+                    <li><strong>Neighborhood-level context:</strong> How accessibility issues cluster within neighborhoods due to shared infrastructure and planning</li>
+                    <li><strong>Multi-scale relationships:</strong> Patterns that emerge from combining local density, regional severity, and city-wide diversity</li>
+                    <li><strong>Learned spatial embeddings:</strong> Representations that encode complex relationships beyond simple distance or feature combinations</li>
+                </ul>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Hotspots</th>
+                            <th>Jaccard with GNN</th>
+                            <th>Spatial Coherence (Moran's I)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="baselines-body">
+                        <tr class="highlight-row">
+                            <td><strong>GNN (Our Method)</strong></td>
+                            <td><strong>255</strong></td>
+                            <td><strong>1.0000</strong></td>
+                            <td><strong>0.2376</strong></td>
+                        </tr>
+                        <tr>
+                            <td>KDE (Severity-weighted)</td>
+                            <td>77</td>
+                            <td>0.0207</td>
+                            <td>0.0230</td>
+                        </tr>
+                        <tr>
+                            <td>Getis-Ord Gi*</td>
+                            <td>17</td>
+                            <td>0.0148</td>
+                            <td>0.7539</td>
+                        </tr>
+                        <tr>
+                            <td>Local Moran's I</td>
+                            <td>0</td>
+                            <td>0.0000</td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr>
+                            <td>Simple Thresholding</td>
+                            <td>63</td>
+                            <td>0.0517</td>
+                            <td>0.1685</td>
+                        </tr>
+                        <tr>
+                            <td>DBSCAN Baseline</td>
+                            <td>85</td>
+                            <td>0.0459</td>
+                            <td>0.1685</td>
+                        </tr>
+                        <tr>
+                            <td>Node2Vec + Clustering</td>
+                            <td>180</td>
+                            <td>0.0381</td>
+                            <td>-0.0030</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/baseline_comparison/budget_coverage.png" alt="Budget Coverage" onerror="this.style.display='none'">
+                    <div class="caption">Budget vs Coverage Analysis</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Model Section -->
+        <section id="model" class="section">
+            <div class="card">
+                <h2>GNN Model Architecture</h2>
+                <p>Graph Attention Network (GAT) with contrastive learning for spatial hotspot detection.</p>
+
+                <h3>Contrastive Learning Explained</h3>
+                <p style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                    <strong>In one sentence:</strong> Contrastive learning teaches the model that nearby locations with similar accessibility issues should have similar embeddings, while distant or dissimilar locations should have different embeddings, without requiring explicit labels about which locations are "hotspots."
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                    <div>
+                        <h3>Architecture</h3>
+                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                            <li><strong>Type:</strong> Graph Attention Network (GAT)</li>
+                            <li><strong>Hidden Dim:</strong> 128</li>
+                            <li><strong>Embedding Dim:</strong> 64</li>
+                            <li><strong>Layers:</strong> 3</li>
+                            <li><strong>Attention Heads:</strong> 4</li>
+                            <li><strong>Dropout:</strong> 0.2</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Training</h3>
+                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                            <li><strong>Method:</strong> Contrastive Learning</li>
+                            <li><strong>Learning Rate:</strong> 0.001</li>
+                            <li><strong>Epochs:</strong> 100</li>
+                            <li><strong>Device:</strong> CUDA (CPU fallback)</li>
+                            <li><strong>Graph:</strong> KNN (k=15)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>Hotspot Detection</h3>
+                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                            <li><strong>Clustering:</strong> DBSCAN</li>
+                            <li><strong>Risk Scoring:</strong> Multi-factor</li>
+                            <li><strong>Density Weight:</strong> 0.4</li>
+                            <li><strong>Severity Weight:</strong> 0.4</li>
+                            <li><strong>Diversity Weight:</strong> 0.2</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 2rem;">Limitations & Future Work</h3>
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-card-hover); border-radius: 0.5rem; border-left: 4px solid var(--warning);">
+                    <p><strong>Limitations:</strong> (1) Hotspot boundaries depend on DBSCAN clustering parameters (eps, min_samples) selected empirically. While we achieve 100% coverage of high-severity issues on the test set, the exact spatial extent of hotspots may vary with different parameters. (2) Graph construction (KNN k=15) was chosen empirically; alternative constructions (radius-based, adaptive k) were not exhaustively explored due to 24-hour datathon constraints. (3) The model was trained on a single train/test split; cross-validation would provide more robust performance estimates but was not feasible within the time constraint. (4) The dataset's crowdsourced nature may introduce reporting biases (e.g., certain neighborhoods may be over-reported) that affect generalizability.</p>
+                </div>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/dashboards/training_curves.png" alt="Training Curves" onerror="this.style.display='none'">
+                    <div class="caption">Training & Validation Loss</div>
+                </div>
+                <div class="image-card">
+                    <img src="outputs/embeddings.png" alt="Embeddings" onerror="this.style.display='none'">
+                    <div class="caption">Learned Embeddings (t-SNE)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Evaluation Section -->
+        <section id="evaluation" class="section">
+            <div class="card">
+                <h2>Evaluation Metrics</h2>
+                <p>Evaluation of model performance on held-out test set (15% of data, 70/15/15 train/val/test split). Metrics computed on test set only to avoid overfitting concerns.</p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="eval-hotspots">--</div>
+                        <div class="stat-label">Hotspots Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eval-coverage">--</div>
+                        <div class="stat-label">High-Severity Coverage</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eval-morans">--</div>
+                        <div class="stat-label">Moran's I</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eval-silhouette">--</div>
+                        <div class="stat-label">Silhouette Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="eval-risk-diff">--</div>
+                        <div class="stat-label">Risk Difference</div>
+                    </div>
+                </div>
+
+                <h3>Detailed Metrics</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Interpretation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metrics-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="outputs/dashboards/evaluation_dashboard.png" alt="Evaluation Dashboard" onerror="this.style.display='none'">
+                    <div class="caption">Evaluation Dashboard</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <script>
+        // Global data
+        let mapData = null;
+        let map = null;
+        let currentLayer = null;
+        let gnnResults = null;
+        let baselineResults = null;
+
+        // Load data
+        async function loadData() {
+            console.log('Starting data load...');
+            try {
+                // Load map data
+                console.log('Loading map_data.json...');
+                const response = await fetch('outputs/map_data.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                mapData = await response.json();
+                console.log('Map data loaded:', Object.keys(mapData));
+                updateStats();
+                populateTables();
+
+                // Load GNN results
+                console.log('Loading results.json...');
+                try {
+                    const resultsResponse = await fetch('outputs/results.json');
+                    if (resultsResponse.ok) {
+                        gnnResults = await resultsResponse.json();
+                        updateEvaluationMetrics();
+                    }
+                } catch (e) {
+                    console.warn('Results JSON not found:', e);
+                }
+
+                // Load baseline comparison
+                console.log('Loading baseline_comparison.json...');
+                try {
+                    const baselineResponse = await fetch('outputs/baseline_comparison.json');
+                    if (baselineResponse.ok) {
+                        baselineResults = await baselineResponse.json();
+                        populateBaselineTable();
+                    }
+                } catch (e) {
+                    console.warn('Baseline comparison JSON not found:', e);
+                }
+
+                console.log('All data loaded successfully!');
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error loading dashboard data. Check console for details.\n\nMake sure you are accessing via http://localhost:8000/dashboard.html');
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            if (!mapData) return;
+            const stats = mapData.stats || {};
+            document.getElementById('stat-barriers').textContent = (stats.totalBarriers || 0).toLocaleString();
+            document.getElementById('stat-cells').textContent = (stats.totalCells || 0).toLocaleString();
+            document.getElementById('stat-hotspots').textContent = (stats.totalHotspots || 0).toLocaleString();
+            document.getElementById('stat-coverage').textContent = stats.coverage ? (stats.coverage * 100).toFixed(1) + '%' : '--';
+            document.getElementById('stat-morans').textContent = stats.moransI ? stats.moransI.toFixed(4) : '--';
+        }
+
+        // Update evaluation metrics
+        function updateEvaluationMetrics() {
+            if (!gnnResults || !gnnResults.evaluation) return;
+            const eval = gnnResults.evaluation;
+            
+            document.getElementById('eval-hotspots').textContent = eval.n_hotspots || '--';
+            document.getElementById('eval-coverage').textContent = eval.coverage ? (eval.coverage.coverage * 100).toFixed(1) + '%' : '--';
+            document.getElementById('eval-morans').textContent = eval.morans_i ? eval.morans_i.toFixed(4) : '--';
+            document.getElementById('eval-silhouette').textContent = eval.silhouette_score ? eval.silhouette_score.toFixed(4) : '--';
+            
+            const riskDiff = eval.avg_risk_in_hotspots && eval.avg_risk_outside_hotspots 
+                ? (eval.avg_risk_in_hotspots - eval.avg_risk_outside_hotspots).toFixed(4) 
+                : '--';
+            document.getElementById('eval-risk-diff').textContent = riskDiff;
+
+            // Update hotspot stats
+            document.getElementById('hotspot-count').textContent = eval.n_hotspots || '--';
+            document.getElementById('hotspot-avg-risk').textContent = eval.avg_risk_in_hotspots ? eval.avg_risk_in_hotspots.toFixed(4) : '--';
+            document.getElementById('hotspot-coverage').textContent = eval.coverage ? (eval.coverage.coverage * 100).toFixed(1) + '%' : '--';
+
+            // Populate metrics table
+            const metricsBody = document.getElementById('metrics-body');
+            if (metricsBody) {
+                metricsBody.innerHTML = `
+                    <tr>
+                        <td>Hotspots Detected</td>
+                        <td>${eval.n_hotspots || '--'}</td>
+                        <td>Number of high-risk spatial units identified</td>
+                    </tr>
+                    <tr>
+                        <td>High-Severity Coverage</td>
+                        <td>${eval.coverage ? (eval.coverage.coverage * 100).toFixed(1) + '%' : '--'}</td>
+                        <td>Percentage of high-severity problems captured</td>
+                    </tr>
+                    <tr>
+                        <td>Moran's I</td>
+                        <td>${eval.morans_i ? eval.morans_i.toFixed(4) : '--'}</td>
+                        <td>Spatial autocorrelation (higher = more clustered)</td>
+                    </tr>
+                    <tr>
+                        <td>Silhouette Score</td>
+                        <td>${eval.silhouette_score ? eval.silhouette_score.toFixed(4) : '--'}</td>
+                        <td>Clustering quality metric</td>
+                    </tr>
+                    <tr>
+                        <td>Avg Risk in Hotspots</td>
+                        <td>${eval.avg_risk_in_hotspots ? eval.avg_risk_in_hotspots.toFixed(4) : '--'}</td>
+                        <td>Average risk score within hotspots</td>
+                    </tr>
+                    <tr>
+                        <td>Avg Risk Outside Hotspots</td>
+                        <td>${eval.avg_risk_outside_hotspots ? eval.avg_risk_outside_hotspots.toFixed(4) : '--'}</td>
+                        <td>Average risk score outside hotspots</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Populate tables
+        function populateTables() {
+            if (!mapData) return;
+
+            // Hotspots table (top 20 by risk score)
+            const hotspotsBody = document.getElementById('hotspots-body');
+            if (hotspotsBody && mapData.cells) {
+                const hotspots = mapData.cells
+                    .filter(c => c.isHotspot === 1)
+                    .sort((a, b) => b.riskScore - a.riskScore)
+                    .slice(0, 20);
+
+                hotspots.forEach((h, idx) => {
+                    hotspotsBody.innerHTML += `
+                        <tr>
+                            <td>${h.cellId || `Hotspot ${idx + 1}`}</td>
+                            <td>${h.neighborhood || 'Unknown'}</td>
+                            <td>${h.riskScore.toFixed(4)}</td>
+                            <td>${h.barrierCount || 0}</td>
+                            <td>${h.severityMean ? h.severityMean.toFixed(2) : '--'}</td>
+                            <td>${h.dominantType || 'Unknown'}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Populate baseline comparison table
+        function populateBaselineTable() {
+            const baselinesBody = document.getElementById('baselines-body');
+            if (!baselinesBody) {
+                console.warn('Baselines table body not found');
+                return;
+            }
+
+            // Clear existing content
+            baselinesBody.innerHTML = '';
+
+            // Get GNN Moran's I from results if available
+            let gnnMoransI = 0.2376; // Default from image
+            if (gnnResults && gnnResults.evaluation && gnnResults.evaluation.morans_i !== undefined) {
+                gnnMoransI = gnnResults.evaluation.morans_i;
+            }
+
+            // Use data from baseline_comparison.json if available, otherwise use values from image
+            let metrics = {};
+            if (baselineResults && baselineResults.comparison_metrics) {
+                metrics = baselineResults.comparison_metrics;
+            }
+
+            const methods = [
+                { 
+                    key: 'gnn', 
+                    name: 'GNN (Our Method)', 
+                    highlight: true,
+                    hotspots: metrics.gnn?.n_hotspots ?? 255,
+                    jaccard: metrics.gnn?.jaccard_with_gnn ?? 1.0000,
+                    coherence: gnnMoransI
+                },
+                { 
+                    key: 'kde', 
+                    name: 'KDE (Severity-weighted)',
+                    hotspots: metrics.kde?.n_hotspots ?? 77,
+                    jaccard: metrics.kde?.jaccard_with_gnn ?? 0.0207,
+                    coherence: metrics.kde?.spatial_coherence ?? 0.0230
+                },
+                { 
+                    key: 'getis_ord', 
+                    name: 'Getis-Ord Gi*',
+                    hotspots: metrics.getis_ord?.n_hotspots ?? 17,
+                    jaccard: metrics.getis_ord?.jaccard_with_gnn ?? 0.0148,
+                    coherence: metrics.getis_ord?.spatial_coherence ?? 0.7539
+                },
+                { 
+                    key: 'local_moran', 
+                    name: "Local Moran's I",
+                    hotspots: metrics.local_moran?.n_hotspots ?? 0,
+                    jaccard: metrics.local_moran?.jaccard_with_gnn ?? 0.0000,
+                    coherence: isNaN(metrics.local_moran?.spatial_coherence) ? 'N/A' : (metrics.local_moran?.spatial_coherence ?? 'N/A')
+                },
+                { 
+                    key: 'simple_threshold', 
+                    name: 'Simple Thresholding',
+                    hotspots: metrics.simple_threshold?.n_hotspots ?? 63,
+                    jaccard: metrics.simple_threshold?.jaccard_with_gnn ?? 0.0517,
+                    coherence: metrics.simple_threshold?.spatial_coherence ?? 0.1685
+                },
+                { 
+                    key: 'dbscan_baseline', 
+                    name: 'DBSCAN Baseline',
+                    hotspots: metrics.dbscan_baseline?.n_hotspots ?? 85,
+                    jaccard: metrics.dbscan_baseline?.jaccard_with_gnn ?? 0.0459,
+                    coherence: metrics.dbscan_baseline?.spatial_coherence ?? 0.1685
+                },
+                { 
+                    key: 'node2vec', 
+                    name: 'Node2Vec + Clustering',
+                    hotspots: metrics.node2vec?.n_hotspots ?? 180,
+                    jaccard: metrics.node2vec?.jaccard_with_gnn ?? 0.0381,
+                    coherence: metrics.node2vec?.spatial_coherence ?? -0.0030
+                }
+            ];
+
+            methods.forEach(method => {
+                const rowClass = method.highlight ? 'style="background: rgba(16, 185, 129, 0.15);"' : '';
+                
+                // Format Jaccard similarity
+                const jaccard = typeof method.jaccard === 'number' ? method.jaccard.toFixed(4) : method.jaccard;
+                
+                // Format spatial coherence
+                let coherence = 'N/A';
+                if (typeof method.coherence === 'number' && !isNaN(method.coherence)) {
+                    coherence = method.coherence.toFixed(4);
+                } else if (method.coherence !== 'N/A' && method.coherence !== null && method.coherence !== undefined) {
+                    coherence = method.coherence;
+                }
+
+                baselinesBody.innerHTML += `
+                    <tr ${rowClass}>
+                        <td><strong>${method.name}</strong></td>
+                        <td>${method.hotspots}</td>
+                        <td>${jaccard}</td>
+                        <td>${coherence}</td>
+                    </tr>
+                `;
+            });
+            
+            console.log('Baseline comparison table populated');
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+
+            // Show/hide map layer bar
+            const mapLayerBar = document.getElementById('map-layer-bar');
+            if (sectionId === 'map') {
+                mapLayerBar.style.display = 'flex';
+                if (!map) {
+                    setTimeout(initMap, 100);
+                }
+            } else {
+                mapLayerBar.style.display = 'none';
+            }
+
+            // Ensure baseline table is populated when baselines section is shown
+            if (sectionId === 'baselines' && baselineResults) {
+                setTimeout(populateBaselineTable, 100);
+            }
+        }
+
+        // Map initialization
+        function initMap() {
+            if (!mapData) return;
+            
+            // Center on data
+            const centerLat = mapData.barriers.length > 0 
+                ? mapData.barriers.reduce((sum, b) => sum + b.lat, 0) / mapData.barriers.length
+                : 47.6062;
+            const centerLng = mapData.barriers.length > 0
+                ? mapData.barriers.reduce((sum, b) => sum + b.lng, 0) / mapData.barriers.length
+                : -122.3321;
+
+            map = L.map('mapContainer').setView([centerLat, centerLng], 12);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap © CartoDB',
+                maxZoom: 19
+            }).addTo(map);
+
+            showLayer('barriers');
+        }
+
+        // Show map layer
+        function showLayer(layerName) {
+            if (!map || !mapData) return;
+
+            document.querySelectorAll('.map-control').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Remove current layer
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+            }
+
+            switch (layerName) {
+                case 'barriers':
+                    currentLayer = L.layerGroup();
+                    mapData.barriers.forEach(b => {
+                        const color = b.severity >= 4 ? '#ef4444' : b.severity >= 3 ? '#f59e0b' : '#10b981';
+                        L.circleMarker([b.lat, b.lng], {
+                            radius: 4,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 1,
+                            fillOpacity: 0.7
+                        }).bindPopup(`<b>${b.type}</b><br>Severity: ${b.severity}<br>Neighborhood: ${b.neighborhood}`)
+                            .addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'cells':
+                    currentLayer = L.layerGroup();
+                    mapData.cells.forEach(c => {
+                        const color = c.riskLevel === 'High' ? '#ef4444' :
+                            c.riskLevel === 'Medium' ? '#f59e0b' : '#10b981';
+                        const radius = Math.min(15, 5 + (c.barrierCount || 0) / 20);
+                        L.circleMarker([c.lat, c.lng], {
+                            radius: radius,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 1,
+                            fillOpacity: 0.6
+                        }).bindPopup(`
+                            <b>Cell ${c.cellId}</b><br>
+                            Neighborhood: ${c.neighborhood || 'Unknown'}<br>
+                            Barriers: ${c.barrierCount || 0}<br>
+                            Risk Score: ${c.riskScore ? c.riskScore.toFixed(4) : '--'}<br>
+                            Risk: ${c.riskLevel || 'Medium'}
+                        `).addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'hotspots':
+                    currentLayer = L.layerGroup();
+                    const hotspots = mapData.cells.filter(c => c.isHotspot === 1);
+                    hotspots.forEach(h => {
+                        L.circleMarker([h.lat, h.lng], {
+                            radius: 12,
+                            fillColor: '#ef4444',
+                            color: '#fff',
+                            weight: 2,
+                            fillOpacity: 0.8
+                        }).bindPopup(`
+                            <b>Hotspot ${h.cellId}</b><br>
+                            Neighborhood: ${h.neighborhood || 'Unknown'}<br>
+                            Risk Score: ${h.riskScore ? h.riskScore.toFixed(4) : '--'}<br>
+                            Barriers: ${h.barrierCount || 0}
+                        `).addTo(currentLayer);
+                    });
+                    currentLayer.addTo(map);
+                    break;
+
+                case 'heatmap':
+                    const heatData = mapData.barriers.map(b => [b.lat, b.lng, b.severity / 5]);
+                    currentLayer = L.heatLayer(heatData, {
+                        radius: 20,
+                        blur: 15,
+                        maxZoom: 15,
+                        gradient: { 0.2: '#10b981', 0.5: '#f59e0b', 0.8: '#ef4444', 1: '#dc2626' }
+                    });
+                    currentLayer.addTo(map);
+                    break;
+            }
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+
+</html>
+
