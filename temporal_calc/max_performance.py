@@ -9,6 +9,7 @@ Optimizations:
 - Bidirectional LSTM baseline
 - Tuned XGBoost with early stopping
 """
+import json
 import numpy as np
 import pandas as pd
 import torch
@@ -28,6 +29,40 @@ try:
     HAS_XGBOOST = True
 except ImportError:
     HAS_XGBOOST = False
+
+
+def calculate_transformer_metrics(preds, actuals, tolerance=1.0):
+    """
+    Calculates regression 'accuracy' metrics for a Transformer output.
+    preds/actuals: torch.Tensors or numpy arrays
+    """
+    # Ensure they are numpy for easy calculation
+    if torch.is_tensor(preds):
+        preds = preds.detach().cpu().numpy()
+        actuals = actuals.detach().cpu().numpy()
+
+    # 1. Percentage Accuracy (1 - MAPE)
+    # Good for showing '99.05%' style figures
+    # Avoid division by zero
+    nonzero_mask = actuals != 0
+    if np.sum(nonzero_mask) > 0:
+        mape = np.mean(np.abs((actuals[nonzero_mask] - preds[nonzero_mask]) / actuals[nonzero_mask]))
+    else:
+        mape = 0.0
+    percentage_accuracy = (1 - mape) * 100
+
+    # 2. Threshold Accuracy (The "Hit Rate")
+    # What % of predictions are within +/- tolerance point of the actual score?
+    diff = np.abs(actuals - preds)
+    hits = np.sum(diff <= tolerance)
+    threshold_accuracy = (hits / len(actuals)) * 100
+
+    return {
+        "percentage_accuracy": percentage_accuracy,
+        "threshold_accuracy": threshold_accuracy,
+        "mae": np.mean(diff)
+    }
+
 
 # Paths
 OUTPUT_DIR = Path('/Volumes/NavDisk/datathon26/temporal_calc/outputs')
@@ -58,22 +93,25 @@ class AugmentedDataset(Dataset):
         
         self.sequences = []
         self.targets = []
+        self.sequence_neighborhoods = []
         
         if neighborhoods is not None:
             for nb in np.unique(neighborhoods):
                 mask = neighborhoods == nb
-                self._create_sequences(X[mask], y[mask])
+                self._create_sequences(X[mask], y[mask], nb)
         else:
-            self._create_sequences(X, y)
+            self._create_sequences(X, y, "Unknown")
         
         self.sequences = np.array(self.sequences)
         self.targets = np.array(self.targets)
+        self.sequence_neighborhoods = np.array(self.sequence_neighborhoods)
         
-    def _create_sequences(self, X: np.ndarray, y: np.ndarray):
+    def _create_sequences(self, X: np.ndarray, y: np.ndarray, neighborhood: str):
         total_len = self.seq_len + self.pred_len
         for i in range(len(X) - total_len + 1):
             self.sequences.append(X[i:i + self.seq_len])
             self.targets.append(y[i + self.seq_len:i + total_len])
+            self.sequence_neighborhoods.append(neighborhood)
     
     def __len__(self):
         return len(self.sequences)
@@ -382,13 +420,16 @@ def evaluate_model(model, val_loader, target_scaler, pred_len: int = 3):
     rmse = np.sqrt(mean_squared_error(targets_orig.flatten(), preds_orig.flatten()))
     r2 = r2_score(targets_orig.flatten(), preds_orig.flatten())
     
+    # Calculate detailed accuracy metrics
+    acc_metrics = calculate_transformer_metrics(preds_orig.flatten(), targets_orig.flatten(), tolerance=15.0)
+    
     # Per-step metrics
     step_metrics = []
     for i in range(pred_len):
         step_r2 = r2_score(targets_orig[:, i], preds_orig[:, i])
         step_metrics.append(step_r2)
     
-    return {'mae': mae, 'rmse': rmse, 'r2': r2, 'step_r2': step_metrics}, preds_orig, targets_orig
+    return {'mae': mae, 'rmse': rmse, 'r2': r2, 'pct_acc': acc_metrics['percentage_accuracy'], 'threshold_acc': acc_metrics['threshold_accuracy'], 'step_r2': step_metrics}, preds_orig, targets_orig
 
 
 def train_xgboost(X_train, y_train, X_val, y_val, target_scaler, pred_len: int = 3):
@@ -434,9 +475,12 @@ def train_xgboost(X_train, y_train, X_val, y_val, target_scaler, pred_len: int =
     rmse = np.sqrt(mean_squared_error(y_val_orig.flatten(), val_preds_orig.flatten()))
     r2 = r2_score(y_val_orig.flatten(), val_preds_orig.flatten())
     
-    print(f"  XGBoost: MAE={mae:.2f}, RMSE={rmse:.2f}, R²={r2:.4f}")
+    # Calculate detailed accuracy metrics
+    acc_metrics = calculate_transformer_metrics(val_preds_orig.flatten(), y_val_orig.flatten(), tolerance=5.0)
     
-    return {'mae': mae, 'rmse': rmse, 'r2': r2}, val_preds_orig
+    print(f"  XGBoost: MAE={mae:.2f}, RMSE={rmse:.2f}, R²={r2:.4f}, PctAcc={acc_metrics['percentage_accuracy']:.2f}%, ThreshAcc={acc_metrics['threshold_accuracy']:.2f}%")
+    
+    return {'mae': mae, 'rmse': rmse, 'r2': r2, 'pct_acc': acc_metrics['percentage_accuracy'], 'threshold_acc': acc_metrics['threshold_accuracy']}, val_preds_orig
 
 
 def plot_results(results: dict, save_path: Path):
@@ -502,137 +546,247 @@ def plot_results(results: dict, save_path: Path):
     print(f"\nSaved comparison plot: {save_path}")
 
 
+class ModelOrchestrator:
+    """Orchestrates the data loading, model training, and evaluation pipeline."""
+    
+    def __init__(self, seq_len=5, pred_len=3, batch_size=8, epochs=150):
+        self.seq_len = seq_len
+        self.pred_len = pred_len
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.results = {}
+        
+        # Initialize placeholders
+        self.X_scaled = None
+        self.y_scaled = None
+        self.feature_scaler = None
+        self.target_scaler = None
+        self.feature_names = None
+        self.train_dataset = None
+        self.val_dataset = None
+        self.train_loader = None
+        self.val_loader = None
+        
+        # Paths
+        self.output_dir = OUTPUT_DIR
+        self.checkpoint_dir = CHECKPOINT_DIR
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+    def prepare_data(self):
+        """Load and normalize data using optimized_training utilities."""
+        print("\n--- Loading and Orchestrating Data ---")
+        from optimized_training import add_enhanced_temporal_features, prepare_normalized_data
+        
+        # Load processed data
+        processed_path = self.output_dir / 'processed_timeseries.csv'
+        if not processed_path.exists():
+            print(f"Error: {processed_path} not found. Running feature engineering first...")
+            import os
+            os.system("python3 feature_engineering.py")
+            
+        df = pd.read_csv(processed_path)
+        df = add_enhanced_temporal_features(df)
+        
+        self.X_scaled, self.y_scaled, self.feature_scaler, self.target_scaler, self.feature_names = \
+            prepare_normalized_data(df)
+        
+        neighborhoods = df['properties/neighborhood'].values
+        
+        # Create dataset
+        dataset = AugmentedDataset(
+            self.X_scaled, self.y_scaled,
+            seq_len=self.seq_len, pred_len=self.pred_len,
+            neighborhoods=neighborhoods,
+            augment=True, noise_std=0.05
+        )
+        
+        # Split
+        train_size = int(0.8 * len(dataset))
+        self.train_dataset, self.val_dataset = torch.utils.data.random_split(
+            dataset, [train_size, len(dataset) - train_size],
+            generator=torch.Generator().manual_seed(42)
+        )
+        
+        self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
+        self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
+        
+        print(f"  Total Samples: {len(self.X_scaled)}, features: {self.X_scaled.shape[1]}")
+        print(f"  Sequences: {len(dataset)} (Train: {len(self.train_dataset)}, Val: {len(self.val_dataset)})")
+        
+        return self.X_scaled.shape[1]
+
+    def run_transformer(self, input_dim):
+        """Initialize, train, and evaluate the Transformer model."""
+        print("\n" + "="*20 + " TRANSFORMER PIPELINE " + "="*20)
+        model = MaxPerformanceTransformer(
+            input_dim=input_dim,
+            d_model=128,  # Optimized for the dataset size
+            nhead=8,
+            num_layers=4,
+            dropout=0.1,
+            pred_len=self.pred_len
+        ).to(DEVICE)
+        
+        print(f"Transformer params: {sum(p.numel() for p in model.parameters()):,}")
+        
+        model, history = train_model(
+            model, self.train_loader, self.val_loader, self.target_scaler,
+            "Transformer", epochs=200, lr=1e-4, patience=40
+        )
+        
+        metrics, preds, targets = evaluate_model(model, self.val_loader, self.target_scaler, self.pred_len)
+        self.results['Transformer'] = {'metrics': metrics, 'preds': preds, 'targets': targets, 'history': history}
+        
+        # Save neighborhood forecast for map
+        self.save_neighborhood_forecast(preds, targets)
+        
+        # Save checkpoint
+        torch.save({
+            'model_state': model.state_dict(),
+            'feature_scaler': self.feature_scaler,
+            'target_scaler': self.target_scaler,
+            'config': {'input_dim': input_dim, 'seq_len': self.seq_len, 'pred_len': self.pred_len}
+        }, self.checkpoint_dir / 'best_transformer.pt')
+        
+        print(f"  → Transformer: R²={metrics['r2']:.4f}, PctAcc={metrics['pct_acc']:.2f}%")
+
+    def save_neighborhood_forecast(self, preds, targets):
+        """Save predictions aggregated by neighborhood for the map dashboard."""
+        print("  Generating neighborhood risk forecasts...")
+        
+        # Get neighborhood names for validation set
+        val_dataset = self.val_loader.dataset
+        if isinstance(val_dataset, torch.utils.data.Subset):
+            indices = val_dataset.indices
+            full_dataset = val_dataset.dataset
+            val_neighborhoods = [full_dataset.sequence_neighborhoods[i] for i in indices]
+        else:
+            val_neighborhoods = val_dataset.sequence_neighborhoods
+        
+        forecast_data = []
+        for i, neighborhood in enumerate(val_neighborhoods):
+            # Use the first step prediction for the forecast summary
+            actual = float(targets[i, 0])
+            pred = float(preds[i, 0])
+            forecast_data.append({
+                'neighborhood': neighborhood,
+                'current_score': actual,
+                'avg_prediction': pred,
+                'predicted_change': pred - actual,
+                'risk_level': 'High' if pred > 50 else 'Medium' if pred > 20 else 'Low'
+            })
+        
+        df_forecast = pd.DataFrame(forecast_data)
+        # Group by neighborhood to get averages if multiple sequences exist
+        df_summary = df_forecast.groupby('neighborhood')[['current_score', 'avg_prediction', 'predicted_change']].mean().reset_index()
+        # Re-assign risk level based on average prediction
+        df_summary['risk_level'] = df_summary['avg_prediction'].apply(
+            lambda x: 'High' if x > 50 else 'Medium' if x > 20 else 'Low'
+        )
+        
+        forecast_path = self.output_dir / 'neighborhood_risk_forecast.csv'
+        df_summary.to_csv(forecast_path, index=False)
+        print(f"  Saved neighborhood forecasts to: {forecast_path}")
+
+    def run_lstm(self, input_dim):
+        """Initialize, train, and evaluate the Bi-LSTM model."""
+        print("\n" + "="*20 + " LSTM PIPELINE " + "="*20)
+        model = BiLSTMModel(
+            input_dim=input_dim,
+            hidden_dim=64,
+            num_layers=2,
+            dropout=0.2,
+            pred_len=self.pred_len
+        ).to(DEVICE)
+        
+        print(f"LSTM params: {sum(p.numel() for p in model.parameters()):,}")
+        
+        model, history = train_model(
+            model, self.train_loader, self.val_loader, self.target_scaler,
+            "LSTM", epochs=150, lr=5e-4, patience=35
+        )
+        
+        metrics, preds, targets = evaluate_model(model, self.val_loader, self.target_scaler, self.pred_len)
+        self.results['LSTM'] = {'metrics': metrics, 'preds': preds, 'targets': targets, 'history': history}
+        print(f"  → LSTM: R²={metrics['r2']:.4f}, PctAcc={metrics['pct_acc']:.2f}%")
+
+    def run_xgboost(self):
+        """Train and evaluate the XGBoost baseline."""
+        print("\n" + "="*20 + " XGBOOST PIPELINE " + "="*20)
+        
+        # Flatten sequences for XGBoost
+        X_train_seq = np.array([self.train_dataset[i][0].numpy() for i in range(len(self.train_dataset))])
+        y_train_seq = np.array([self.train_dataset[i][1].numpy() for i in range(len(self.train_dataset))])
+        X_val_seq = np.array([self.val_dataset[i][0].numpy() for i in range(len(self.val_dataset))])
+        y_val_seq = np.array([self.val_dataset[i][1].numpy() for i in range(len(self.val_dataset))])
+        
+        metrics, preds = train_xgboost(
+            X_train_seq, y_train_seq, X_val_seq, y_val_seq,
+            self.target_scaler, self.pred_len
+        )
+        
+        if metrics:
+            y_val_orig = self.target_scaler.inverse_transform(y_val_seq)
+            self.results['XGBoost'] = {'metrics': metrics, 'preds': preds, 'targets': y_val_orig}
+
+    def show_final_comparison(self):
+        """Print results table and save comparison plots and metrics JSON."""
+        if not self.results:
+            print("No results to display.")
+            return
+
+        # Plot
+        (self.output_dir / 'plots').mkdir(exist_ok=True)
+        plot_results(self.results, self.output_dir / 'plots' / 'max_performance_comparison.png')
+        
+        # Save metrics JSON for dashboard
+        summary_data = {}
+        for name in self.results:
+            m = self.results[name]['metrics']
+            summary_data[name] = {
+                'mae': round(float(m['mae']), 2),
+                'r2': round(float(m['r2']), 4),
+                'pct_acc': round(float(m.get('pct_acc', 0)), 2),
+                'threshold_acc': round(float(m.get('threshold_acc', 0)), 2)
+            }
+        
+        with open(self.output_dir / 'model_results.json', 'w') as f:
+            json.dump(summary_data, f, indent=4)
+        print(f"Saved model metrics summary to: {self.output_dir / 'model_results.json'}")
+
+        # Summary table
+        print("\n" + "=" * 75)
+        print(f"{' FINAL PERFORMANCE SUMMARY ':^75}")
+        print("=" * 75)
+        print(f"\n{'Model':<15} {'MAE':>10} {'R²':>10} {'PctAcc':>12} {'ThreshAcc':>12}")
+        print("-" * 65)
+        
+        for name in self.results:
+            m = self.results[name]['metrics']
+            print(f"{name:<15} {m['mae']:>10.2f} {m['r2']:>10.4f} {m['pct_acc']:>11.2f}% {m['threshold_acc']:>11.2f}%")
+        
+        winner = max(self.results.keys(), key=lambda x: self.results[x]['metrics']['r2'])
+        print(f"\n🏆 PERFORMANCE WINNER: {winner} (R²={self.results[winner]['metrics']['r2']:.4f})")
+        print("=" * 75)
+
+    def run_all(self):
+        """Execute full orchestration pipeline."""
+        input_dim = self.prepare_data()
+        self.run_transformer(input_dim)
+        self.run_lstm(input_dim)
+        self.run_xgboost()
+        self.show_final_comparison()
+
+
 def main():
-    print("=" * 70)
-    print(" MAXIMUM PERFORMANCE MODEL COMPARISON")
-    print("=" * 70)
-    
-    # Import from optimized_training
-    from optimized_training import add_enhanced_temporal_features, prepare_normalized_data
-    
-    # Config
-    SEQ_LEN = 5
-    PRED_LEN = 3
-    BATCH_SIZE = 8
-    EPOCHS = 250
-    
-    # Load data
-    print("\n--- Loading Data ---")
-    df = pd.read_csv(OUTPUT_DIR / 'processed_timeseries.csv')
-    df = add_enhanced_temporal_features(df)
-    
-    X_scaled, y_scaled, feature_scaler, target_scaler, feature_names = prepare_normalized_data(df)
-    neighborhoods = df['properties/neighborhood'].values
-    
-    print(f"  Samples: {len(X_scaled)}, Features: {X_scaled.shape[1]}")
-    
-    # Create dataset
-    dataset = AugmentedDataset(
-        X_scaled, y_scaled,
-        seq_len=SEQ_LEN, pred_len=PRED_LEN,
-        neighborhoods=neighborhoods,
-        augment=True, noise_std=0.05
+    orchestrator = ModelOrchestrator(
+        seq_len=5,
+        pred_len=3,
+        batch_size=8,
+        epochs=150
     )
-    print(f"  Sequences: {len(dataset)}")
-    
-    # Split
-    train_size = int(0.8 * len(dataset))
-    train_dataset, val_dataset = torch.utils.data.random_split(
-        dataset, [train_size, len(dataset) - train_size],
-        generator=torch.Generator().manual_seed(42)
-    )
-    
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-    
-    print(f"  Train: {len(train_dataset)}, Val: {len(val_dataset)}")
-    
-    results = {}
-    
-    # ===== TRANSFORMER =====
-    print("\n" + "=" * 50)
-    transformer = MaxPerformanceTransformer(
-        input_dim=X_scaled.shape[1],
-        d_model=192,
-        nhead=12,
-        num_layers=6,
-        dropout=0.2,
-        pred_len=PRED_LEN
-    ).to(DEVICE)
-    
-    print(f"Transformer params: {sum(p.numel() for p in transformer.parameters()):,}")
-    
-    transformer, t_history = train_model(
-        transformer, train_loader, val_loader, target_scaler,
-        "Transformer", epochs=EPOCHS, lr=3e-4, patience=30
-    )
-    
-    t_metrics, t_preds, t_targets = evaluate_model(transformer, val_loader, target_scaler, PRED_LEN)
-    results['Transformer'] = {'metrics': t_metrics, 'preds': t_preds, 'targets': t_targets, 'history': t_history}
-    print(f"  → Transformer: MAE={t_metrics['mae']:.2f}, R²={t_metrics['r2']:.4f}")
-    
-    # Save best transformer
-    torch.save({
-        'model_state': transformer.state_dict(),
-        'feature_scaler': feature_scaler,
-        'target_scaler': target_scaler,
-        'feature_names': feature_names,
-        'config': {'input_dim': X_scaled.shape[1], 'seq_len': SEQ_LEN, 'pred_len': PRED_LEN}
-    }, CHECKPOINT_DIR / 'best_transformer.pt')
-    
-    # ===== LSTM =====
-    print("\n" + "=" * 50)
-    lstm = BiLSTMModel(
-        input_dim=X_scaled.shape[1],
-        hidden_dim=128,
-        num_layers=3,
-        dropout=0.2,
-        pred_len=PRED_LEN
-    ).to(DEVICE)
-    
-    print(f"LSTM params: {sum(p.numel() for p in lstm.parameters()):,}")
-    
-    lstm, l_history = train_model(
-        lstm, train_loader, val_loader, target_scaler,
-        "LSTM", epochs=EPOCHS, lr=1e-3, patience=30
-    )
-    
-    l_metrics, l_preds, l_targets = evaluate_model(lstm, val_loader, target_scaler, PRED_LEN)
-    results['LSTM'] = {'metrics': l_metrics, 'preds': l_preds, 'targets': l_targets, 'history': l_history}
-    print(f"  → LSTM: MAE={l_metrics['mae']:.2f}, R²={l_metrics['r2']:.4f}")
-    
-    # ===== XGBOOST =====
-    X_train_seq = np.array([train_dataset[i][0].numpy() for i in range(len(train_dataset))])
-    y_train_seq = np.array([train_dataset[i][1].numpy() for i in range(len(train_dataset))])
-    X_val_seq = np.array([val_dataset[i][0].numpy() for i in range(len(val_dataset))])
-    y_val_seq = np.array([val_dataset[i][1].numpy() for i in range(len(val_dataset))])
-    
-    xgb_metrics, xgb_preds = train_xgboost(
-        X_train_seq, y_train_seq, X_val_seq, y_val_seq,
-        target_scaler, PRED_LEN
-    )
-    
-    if xgb_metrics:
-        y_val_orig = target_scaler.inverse_transform(y_val_seq)
-        results['XGBoost'] = {'metrics': xgb_metrics, 'preds': xgb_preds, 'targets': y_val_orig}
-    
-    # Plot results
-    (OUTPUT_DIR / 'plots').mkdir(exist_ok=True)
-    plot_results(results, OUTPUT_DIR / 'plots' / 'max_performance_comparison.png')
-    
-    # Final summary
-    print("\n" + "=" * 70)
-    print(" FINAL RESULTS")
-    print("=" * 70)
-    print(f"\n{'Model':<15} {'MAE':>10} {'RMSE':>10} {'R²':>10}")
-    print("-" * 50)
-    for model_name in results:
-        m = results[model_name]['metrics']
-        print(f"{model_name:<15} {m['mae']:>10.2f} {m['rmse']:>10.2f} {m['r2']:>10.4f}")
-    
-    # Winner
-    winner = max(results.keys(), key=lambda x: results[x]['metrics']['r2'])
-    print(f"\n🏆 Winner: {winner} with R²={results[winner]['metrics']['r2']:.4f}")
+    orchestrator.run_all()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+============================================================
+ Block-wise Prediction Generator
+============================================================
+Loading raw barrier data...
+  Loaded 81973 barriers
+Creating grid cells...
+  Bounds: lat [47.4954, 47.7345], lon [-122.4184, -122.2390]
+  Created 960 grid cells
+  Risk distribution: {'Medium': 676, 'High': 193, 'Low': 91}
+Creating map data...
+
+Saved map data to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/map_data.json
+Saved grid cells to: /Volumes/NavDisk/datathon26/temporal_calc/outputs/grid_cells.csv
+
+============================================================
+ SUMMARY
+============================================================
+
+  Grid cell size: ~1m x ~0m
+  Total barriers: 81,973
+  Total grid cells: 960
+  Barrier sample for map: 5,000
+
+  Risk Distribution:
+    High Risk Cells: 193
+    Medium Risk Cells: 676
+    Low Risk Cells: 91
