@@ -767,7 +767,7 @@ class ModelOrchestrator:
             print(f"{name:<15} {m['mae']:>10.2f} {m['r2']:>10.4f} {m['pct_acc']:>11.2f}% {m['threshold_acc']:>11.2f}%")
         
         winner = max(self.results.keys(), key=lambda x: self.results[x]['metrics']['r2'])
-        print(f"\n🏆 PERFORMANCE WINNER: {winner} (R²={self.results[winner]['metrics']['r2']:.4f})")
+        print(f"\nPERFORMANCE WINNER: {winner} (R²={self.results[winner]['metrics']['r2']:.4f})")
         print("=" * 75)
 
     def run_all(self):

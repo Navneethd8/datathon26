@@ -217,7 +217,7 @@ def main():
     print(risk_results[['neighborhood', 'current_score', 'predicted_score', 'risk_change', 'risk_level']].head(10).to_string(index=False))
     print()
     
-    print_subsection("✅ TOP 5 IMPROVING NEIGHBORHOODS")
+    print_subsection("TOP 5 IMPROVING NEIGHBORHOODS")
     print(risk_results[['neighborhood', 'current_score', 'predicted_score', 'risk_change', 'risk_level']].tail(5).to_string(index=False))
     
     # Generate visualizations
