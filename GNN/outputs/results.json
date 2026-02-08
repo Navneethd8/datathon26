@@ -1,22 +1,22 @@
 {
-  "timestamp": "2026-02-07T12:07:35.764389",
-  "num_epochs": 100,
-  "final_loss": 0.10506382584571838,
-  "early_stopped": false,
-  "n_hotspots": 525,
-  "n_spatial_units": 11556,
+  "timestamp": "2026-02-07T15:54:12.766834",
+  "num_epochs": null,
+  "final_loss": null,
+  "early_stopped": null,
+  "n_hotspots": 255,
+  "n_spatial_units": 6826,
   "evaluation": {
     "silhouette_score": 0.0,
-    "morans_i": 0.3217256411876631,
+    "morans_i": 0.23755398198834687,
     "coverage": {
-      "high_severity_count": 24257,
-      "high_severity_in_hotspots": 24257,
+      "high_severity_count": 3634,
+      "high_severity_in_hotspots": 3634,
       "coverage": 1.0
     },
-    "n_hotspots": 525,
-    "n_spatial_units": 11556,
-    "hotspot_ratio": 0.04543094496365525,
-    "avg_risk_in_hotspots": 0.6796941576059551,
-    "avg_risk_outside_hotspots": 0.4442025515634151
+    "n_hotspots": 255,
+    "n_spatial_units": 6826,
+    "hotspot_ratio": 0.03735716378552593,
+    "avg_risk_in_hotspots": 0.7520199443147366,
+    "avg_risk_outside_hotspots": 0.4665576205271418
   }
 }

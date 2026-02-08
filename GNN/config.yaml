@@ -6,6 +6,13 @@ data:
   process_all_cities: true
   city_filter: null  # Set to specific city name to filter, or null for all
 
+# Data Splitting Configuration
+data_split:
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_state: 42
+
 # Graph Construction
 graph:
   method: "knn"  # "knn" or "distance_threshold"
